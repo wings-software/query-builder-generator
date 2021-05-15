@@ -5,10 +5,12 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/query-builder-generator/src",
     visibility = ["//visibility:private"],
+    deps = ["//src/cmd:go_default_library"],
 )
 
 go_binary(
-    name = "qbg",
+    name = "qbc",
     embed = [":go_default_library"],
+    importpath = "github.com/query-builder-generator/src",
     visibility = ["//visibility:public"],
 )

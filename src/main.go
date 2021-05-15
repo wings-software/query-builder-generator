@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
+"github.com/query-builder-generator/src/cmd"
 )
-
 func main() {
-	fmt.Println("hello world")
+	cmd.Execute()
 }

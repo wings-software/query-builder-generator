@@ -1,0 +1,5 @@
+# Add properties that are shared between developers and ci build system
+
+# Test specific
+build --test_output=errors
+build --test_env=LC_ALL="en_US.UTF-8"
