@@ -1,9 +1,9 @@
 //go:generate goyacc -o query.y.go -p Dom query.y
 
-package dom
+package parser
 
 import (
-  "testing"
+	"testing"
   "github.com/stretchr/testify/assert"
 )
 

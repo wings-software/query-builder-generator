@@ -1,5 +1,5 @@
 %{
-package dom
+package parser
 import (
 	"text/scanner"
 	"strconv"

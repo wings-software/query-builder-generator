@@ -1,9 +1,15 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 load("//:bazel/yacc.bzl", "go_yacc")
 
+go_yacc(
+    yacc="query.y",
+    go="query.y.go",
+    prefix="Dom"
+    )
+
 go_library(
     name = "go_default_library",
-    srcs = glob(["*.go"]),
+    srcs = ["query.y.go"],
     importpath = "github.com/query-builder-generator/src/dom",
     visibility = ["//visibility:public"],
 )
