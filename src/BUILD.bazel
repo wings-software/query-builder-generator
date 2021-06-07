@@ -9,7 +9,7 @@ go_library(
 )
 
 go_binary(
-    name = "qbc",
+    name = "qbq",
     embed = [":go_default_library"],
     importpath = "github.com/query-builder-generator/src",
     visibility = ["//visibility:public"],
