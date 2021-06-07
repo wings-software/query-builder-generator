@@ -13,18 +13,7 @@ import (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "qbc",
-	Short: "Query Builder Compiler",
-	Long: `Query Builder Compiler - compiles query builder files into source code.`,
-	Run: func(cmd *cobra.Command, args []string) {
-    generateFile(cmd, args)
-    },
-}
-
-func generateFile(cmd *cobra.Command, args []string) error {
-    var outputContentWithoutDelegateId  = `
+var outputContentWithoutDelegateId  = `
 package io.harness.beans;
 
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -163,11 +152,34 @@ public class DelegateTasksQuery implements PersistentQuery {
   }
 }
 `
-    var inputPath string = args[0];
-    var outputPath string = args[1];
 
-    fmt.Println("Reading file at path [" + inputPath +"]")
-    data, err := ioutil.ReadFile(inputPath)
+
+
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:   "qbc",
+	Short: "Query Builder Compiler",
+	Long: `Query Builder Compiler - compiles query builder files into source code.`,
+	Run: func(cmd *cobra.Command, args []string) {
+	    fmt.Println("Root command. Use subcommands")
+        //generateFile(cmd, args)
+    },
+}
+
+var generateCmd = &cobra.Command{
+    Use:   "generate",
+    Short: "Generate Java classes",
+    Long: "Generate Java classes - to be used in portal code",
+    Run: func (cmd *cobra.Command, args []string) {
+        generateFile(cmd)
+    },
+}
+
+
+func generateFile(cmd *cobra.Command) error {
+    fmt.Println("Reading file at path [" + inputFilePath +"]")
+    data, err := ioutil.ReadFile(inputFilePath)
     if err != nil {
         fmt.Println(err)
     }
@@ -179,8 +191,8 @@ public class DelegateTasksQuery implements PersistentQuery {
         outputContent = outputContentWithoutDelegateId;
     }
 
-    fmt.Println("Writing file at path [" + outputPath +"]")
-    err = ioutil.WriteFile(outputPath, []byte(outputContent), 0777)
+    fmt.Println("Writing file at path [" + outputFilePath +"]")
+    err = ioutil.WriteFile(outputFilePath, []byte(outputContent), 0777)
     if err != nil {
        fmt.Println(err)
     }
@@ -188,12 +200,23 @@ public class DelegateTasksQuery implements PersistentQuery {
     return nil
 }
 
+func addCommands() {
+    rootCmd.AddCommand(generateCmd)
+}
+
 func Execute() {
+    addCommands()
 	cobra.CheckErr(rootCmd.Execute())
 }
 
+
+// adds flags
+var inputFilePath, outputFilePath string
 func init() {
 	cobra.OnInitialize(initConfig)
+
+	generateCmd.Flags().StringVar(&inputFilePath, "input", "default", "--input=<Input File path>")
+    generateCmd.Flags().StringVar(&outputFilePath, "output", "default", "--output=<Output File path>")
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.qbc.yaml)")
 
@@ -214,7 +237,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".qbc" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".qbc")
+		viper.SetConfigName(".qbg")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
