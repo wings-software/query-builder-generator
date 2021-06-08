@@ -75,5 +75,5 @@ func TestSanityWithSingleFilterAndProject(t *testing.T) {
 					}`)
 	assert.Equal(t, dom.Query{Name: "Select",
 		Collection: "io.harness.beans.DelegateTasks",
-		Filters:    []dom.Filter{dom.Filter{FieldType: "string", FieldName: "accountId"}}, ProjectFields: []string{"id"}}, q)
+		Filters:    []dom.Filter{dom.Filter{FieldType: "string", FieldName: "accountId", Operation: dom.Eq}}, ProjectFields: []string{"id"}}, q)
 }
