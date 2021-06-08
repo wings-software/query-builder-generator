@@ -115,7 +115,7 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		var currFieldNameTitle = strings.Title(currFieldName)
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
-		case dom.None:
+		case dom.Eq:
 			interfaces.WriteString(fmt.Sprintf(interfaceTemplate, name, currFieldNameTitle, name, strings.Title(nextFieldName),
 				currFieldName, currFieldType, currFieldName))
 			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle))

@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-func TestSanity(t *testing.T) {
+func TestSanity1(t *testing.T) {
 	query := dom.Query{
-		Name: "Select",
+		Name:       "Select",
 		Collection: "io.harness.beans.DelegateTask",
 		Filters: []dom.Filter{
 			{FieldType: "String", FieldName: "accountId"},
@@ -70,11 +70,12 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
   }
 }
 `
-
 	result := compiler.Generate(&query)
 	assert.Equal(t, expected, result)
+}
 
-	query1 := dom.Query{
+func TestSanity2(t *testing.T) {
+	query := dom.Query{
 		Name: "Select",
 		Collection: "io.harness.beans.DelegateTask",
 		Filters: []dom.Filter{
@@ -83,7 +84,7 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 		},
 		ProjectFields: []string{"foo", "bar"},
 	}
-	expected1 := `package io.harness.beans;
+	expected := `package io.harness.beans;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -137,6 +138,8 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
   }
 }
 `
-	result = compiler.Generate(&query1)
-	assert.Equal(t, expected1, result)
+	compiler := Compiler{}
+
+	var result = compiler.Generate(&query)
+	assert.Equal(t, expected, result)
 }
