@@ -11,7 +11,7 @@ type Compiler struct {
 
 const createTemplate = `
   public static %sQuery%s create(HPersistence persistence) {
-    return new QueryImpl(persistence.createQuery(%s.class));
+    return new QueryImpl(persistence.createQuery(%s.class)%s);
   }`
 
 const interfaceTemplate = `
@@ -87,7 +87,12 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	var name = query.Name
 	var collectionName = compiler.collectionName(query.Collection)
 
-	createMethod := fmt.Sprintf(createTemplate, name, strings.Title(query.Filters[0].FieldName), collectionName)
+	var projections strings.Builder
+	for _, field := range query.ProjectFields {
+		projections.WriteString(fmt.Sprintf("\n                                    .project(%sKeys.%s, true)", collectionName, field))
+	}
+
+	createMethod := fmt.Sprintf(createTemplate, name, strings.Title(query.Filters[0].FieldName), collectionName, projections.String())
 
 	var interfaces strings.Builder
 	var interfaceNames strings.Builder

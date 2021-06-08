@@ -80,6 +80,7 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 			{FieldType: "String", FieldName: "accountId"},
 			{FieldType: "String", FieldName: "uuid", Operation: dom.In},
 		},
+		ProjectFields: []string{"foo", "bar"},
 	}
 	expected1 := `package io.harness.beans;
 
@@ -91,7 +92,9 @@ import org.mongodb.morphia.query.Query;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryAccountId create(HPersistence persistence) {
-    return new QueryImpl(persistence.createQuery(DelegateTask.class));
+    return new QueryImpl(persistence.createQuery(DelegateTask.class)
+                                    .project(DelegateTaskKeys.foo, true)
+                                    .project(DelegateTaskKeys.bar, true));
   }
 
   public interface SelectQueryAccountId {
@@ -124,6 +127,10 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
     public Query<DelegateTask> query() {
       return query;
     }
+  }
+
+  List<String> queryCanonicalForms() {
+    return ImmutableList.<String>builder().build();
   }
 }
 `
