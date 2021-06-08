@@ -17,19 +17,17 @@ func TestSanity(t *testing.T) {
 
     fmt.Println("Generating Java File")
 
-    var collectionName = query.Collection
 
     //generate #1
+    var collectionName = query.Collection
     var s1_template = `
-  public static %sQueryAccountId create(HPersistence persistence) {
+  public static %sQuery%s create(HPersistence persistence) {
     return new QueryImpl(persistence.createQuery(%s.class));
   }`
-    s1 := fmt.Sprintf(s1_template, collectionName, collectionName)
-    fmt.Println(s1)
+    s1 := fmt.Sprintf(s1_template, collectionName, strings.Title(query.Filters[0].FieldName), collectionName)
 
 
     // Generate #2
-
     var s2_template_1 = `
   public interface %sQuery%s {
     %sQuery%s %s(%s %s);
@@ -39,23 +37,73 @@ func TestSanity(t *testing.T) {
     Query<%s> query();
   }
     `
-    var s2 strings.Builder
+    var s3_1 strings.Builder //
+    var s2_1 strings.Builder
     var filtersCount = len(query.Filters)
     for i := 0; i < filtersCount; i++ {
         var nextFieldName = "";
         if i == filtersCount-1 {
             nextFieldName = "Final"
         } else {
-            nextFieldName = query.Filters[i+1].FieldType
+            nextFieldName = query.Filters[i+1].FieldName
         }
 
         var currFieldType = query.Filters[i].FieldType
         var currFieldName = query.Filters[i].FieldName
-        s2.WriteString(fmt.Sprintf(s2_template_1, collectionName, currFieldType, collectionName, nextFieldName, currFieldName, currFieldType, currFieldName))
+        s2_1.WriteString(fmt.Sprintf(s2_template_1, collectionName, strings.Title(currFieldName), collectionName, strings.Title(nextFieldName), currFieldName, currFieldType, currFieldName))
+        s3_1.WriteString(fmt.Sprintf("%sQuery%s, ", collectionName, strings.Title(currFieldName)))
     }
 
+    s2_1.WriteString(fmt.Sprintf(s2_template_2, collectionName, collectionName))
+    s3_1.WriteString(fmt.Sprintf("%sQuery%s", collectionName, "Final"))
+    var s2 = s2_1.String()
 
-    s2.WriteString(fmt.Sprintf(s2_template_2, collectionName, collectionName))
 
-    fmt.Println(s2.String())
+    // Generate #3
+    var s3_template_1=`
+    public %sQuery%s %s(%s %s) {
+      query.filter(%sKeys.%s, %s);
+      return this;
+    }`
+    var s3_2 strings.Builder
+    for i := 0; i < filtersCount; i++ {
+        var nextFieldName = "";
+        if i == filtersCount-1 {
+            nextFieldName = "Final"
+        } else {
+            nextFieldName = query.Filters[i+1].FieldName
+        }
+
+        var currFieldType = query.Filters[i].FieldType
+        var currFieldName = query.Filters[i].FieldName
+        s3_2.WriteString(fmt.Sprintf(s3_template_1, collectionName, strings.Title(nextFieldName), currFieldName, currFieldType, currFieldName, collectionName,
+        currFieldName, currFieldName))
+    }
+    var s3_template_2=`
+  private static class QueryImpl implements %s {
+    Query<%s> query;
+    private QueryImpl(Query<%s> query) {
+      this.query = query;
+    }%s
+    public Query<%s> query() {
+      return query;
+    }
+  }
+    `
+    var s3 = fmt.Sprintf(s3_template_2, s3_1.String(), collectionName, collectionName, s3_2.String(), collectionName)
+
+
+
+    var generatedFile_template=`
+package io.harness.beans;
+import io.harness.beans.%s.%sKeys;
+import io.harness.persistence.HPersistence;
+import io.harness.query.PersistentQuery;
+import org.mongodb.morphia.query.Query;
+
+public class %sQuery implements PersistentQuery {%s%s
+%s
+}
+    `
+    fmt.Println(fmt.Sprintf(generatedFile_template, collectionName, collectionName, collectionName, s2, s1, s3))
 }
