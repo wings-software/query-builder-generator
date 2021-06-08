@@ -27,6 +27,12 @@ func (l *Lexer) Lex(lval *DomSymType) int {
 			tok = QUERY
 		case "for":
 			tok = FOR
+		case "project":
+			tok = PROJECT
+		case "filter":
+			tok = FILTER
+		case "as":
+			tok = AS
 		default:
 			tok = IDENTIFIER
 			lval.identifier = lit

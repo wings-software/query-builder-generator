@@ -1,5 +1,5 @@
 package dom
 
-type Filter interface {
+type Filter struct {
 
 }

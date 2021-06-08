@@ -9,11 +9,15 @@ import (
 )
 
 func TestSanity(t *testing.T) {
-	q := Parse("query foo for io.harness.beans.DelegateTasks {}")
-	assert.Equal(t, dom.Query{Name: "foo", Collection:"io.harness.beans.DelegateTasks"}, q)
+	q := Parse("query DelegateTask for io.harness.beans.DelegateTasks {}")
+	assert.Equal(t, dom.Query{Name: "DelegateTask", Collection: "io.harness.beans.DelegateTasks"}, q)
 }
 
-//func TestSanity1(t *testing.T) {
-//	doc := Parse("query foo {}")
-//	assert.Equal(t, doc.queries[0].name, "foo")
-//}
+func TestSanityWithStatements(t *testing.T) {
+	q := Parse("query DelegateTask for io.harness.beans.DelegateTasks " +
+		"{" +
+		"filter accountId as string " +
+		"project {  uuid  }" +
+		" }")
+	assert.Equal(t, dom.Query{Name: "DelegateTask", Collection: "io.harness.beans.DelegateTasks", QueryStmtType: "{filter string accountId}", ProjectFields:"uuid"},  q)
+}
