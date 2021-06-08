@@ -1,5 +1,6 @@
 package dom
 
-type Filter interface {
-
+type Filter struct {
+    FieldType string
+    FieldName string
 }
