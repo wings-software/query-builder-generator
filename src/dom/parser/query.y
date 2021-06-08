@@ -17,6 +17,7 @@ type Token struct {
     filters []dom.Filter
     filter dom.Filter
     projectfields []string
+    projectfield string
 }
 
 %token <query> QUERY
@@ -32,11 +33,17 @@ type Token struct {
 %type <classname> classname
 %type <filters> filter_list
 %type <filter> filter
-%type <projectfields> projectfields
+%type <projectfields> projectfield_list
+%type <projectfield> projectfield
 
 %%
 
-query       :   QUERY IDENTIFIER FOR classname '{' filter_list projectfields '}'
+query       :   QUERY IDENTIFIER FOR classname '{' filter_list '}'
+            {
+                $$ = dom.Query{Name: $2, Collection: $4, Filters: $6 }
+                Domlex.(*Lexer).result = $$
+            }
+            |   QUERY IDENTIFIER FOR classname '{' filter_list projectfield_list '}'
             {
                 $$ = dom.Query{Name: $2, Collection: $4, Filters: $6, ProjectFields: $7}
                 Domlex.(*Lexer).result = $$
@@ -54,10 +61,10 @@ filter_list : 	filter
 		;
 
 filter      :   FILTER IDENTIFIER AS classname ';'
-		{
+		    {
 			$$ = dom.Filter{FieldType: $4, FieldName: $2, Operation: dom.Eq}
             	}
-            	| FILTER IDENTIFIER AS IDENTIFIER FROM LIST ';'
+            	| FILTER IDENTIFIER AS classname FROM LIST ';'
             	{
 		        $$ = dom.Filter{FieldType: $4, FieldName: $2, Operation: dom.In}
             	}
@@ -73,8 +80,18 @@ classname   :   IDENTIFIER
             	}
             	;
 
-projectfields: PROJECT IDENTIFIER ';'
+projectfield_list : 	projectfield
+            	{
+                	$$ = []string{$1}
+                }
+            	| projectfield_list projectfield
+            	{
+            		$$ = append($1, $2)
+            	}
+		;
+
+projectfield: PROJECT IDENTIFIER ';'
 		{
-			$$ = []string{$2}
+			$$ = $2
 		}
 %%

@@ -88,8 +88,10 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	var collectionName = compiler.collectionName(query.Collection)
 
 	var projections strings.Builder
-	for _, field := range query.ProjectFields {
-		projections.WriteString(fmt.Sprintf("\n                                    .project(%sKeys.%s, true)", collectionName, field))
+	if query.ProjectFields != nil {
+		for _, field := range query.ProjectFields {
+			projections.WriteString(fmt.Sprintf("\n                                    .project(%sKeys.%s, true)", collectionName, field))
+		}
 	}
 
 	createMethod := fmt.Sprintf(createTemplate, name, strings.Title(query.Filters[0].FieldName), collectionName, projections.String())

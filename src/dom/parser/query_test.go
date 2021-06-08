@@ -48,7 +48,7 @@ func TestFiltersWithList(t *testing.T) {
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
-			{FieldType: "string", FieldName: "accountId", Operation: dom.In},
+			{FieldType: "io.harness.beans.Id", FieldName: "accountId", Operation: dom.In},
 			{FieldType: "int", FieldName: "delegateId", Operation: dom.In},
 		},
 	}, q)
@@ -67,7 +67,20 @@ func TestFiltersWithFullPath(t *testing.T) {
 	}, q)
 }
 
-func TestSanityWithSingleFilterAndProject(t *testing.T) {
+func TestWithNoProject(t *testing.T) {
+	q := Parse(`query Select for io.harness.beans.DelegateTasks 
+					{
+						filter accountId as string ;
+					}`)
+	assert.Equal(t, dom.Query{Name: "Select",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters: []dom.Filter{
+			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
+		},
+	}, q)
+}
+
+func TestWithProject(t *testing.T) {
 	q := Parse(`query Select for io.harness.beans.DelegateTasks 
 					{
 						filter accountId as string ;
@@ -75,5 +88,25 @@ func TestSanityWithSingleFilterAndProject(t *testing.T) {
 					}`)
 	assert.Equal(t, dom.Query{Name: "Select",
 		Collection: "io.harness.beans.DelegateTasks",
-		Filters:    []dom.Filter{dom.Filter{FieldType: "string", FieldName: "accountId", Operation: dom.Eq}}, ProjectFields: []string{"id"}}, q)
+		Filters: []dom.Filter{
+			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
+		},
+		ProjectFields: []string{"id"},
+	}, q)
+}
+
+func TestWithMultipleProjects(t *testing.T) {
+	q := Parse(`query Select for io.harness.beans.DelegateTasks 
+					{
+						filter accountId as string ;
+						project id ;
+						project foo_bar ;
+					}`)
+	assert.Equal(t, dom.Query{Name: "Select",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters: []dom.Filter{
+			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
+		},
+		ProjectFields: []string{"id", "foo_bar"},
+	}, q)
 }
