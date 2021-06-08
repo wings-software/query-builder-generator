@@ -9,8 +9,8 @@ import (
 )
 
 func TestSanity(t *testing.T) {
-	q := Parse("query foo {}")
-	assert.Equal(t, dom.Query{Name: "foo"}, q)
+	q := Parse("query foo for io.harness.beans.DelegateTasks {}")
+	assert.Equal(t, dom.Query{Name: "foo", Collection:"io.harness.beans.DelegateTasks"}, q)
 }
 
 //func TestSanity1(t *testing.T) {

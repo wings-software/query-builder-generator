@@ -18,12 +18,15 @@ func (l *Lexer) Lex(lval *DomSymType) int {
 
 	switch tok {
 	case -1:
+	case 46:
 	case 123:
 	case 125:
 	default:
 		switch lit {
 		case "query":
 			tok = QUERY
+		case "for":
+			tok = FOR
 		default:
 			tok = IDENTIFIER
 			lval.identifier = lit
