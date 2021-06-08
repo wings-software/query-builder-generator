@@ -11,8 +11,8 @@ func TestSanity1(t *testing.T) {
 		Name:       "Select",
 		Collection: "io.harness.beans.DelegateTask",
 		Filters: []dom.Filter{
-			{FieldType: "String", FieldName: "accountId"},
-			{FieldType: "String", FieldName: "uuid"},
+			{FieldType: "String", FieldName: "accountId", Operation: dom.Eq},
+			{FieldType: "String", FieldName: "uuid", Operation: dom.Eq},
 		},
 	}
 
@@ -50,22 +50,26 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
       this.query = query;
     }
 
+    @Override
     public SelectQueryUuid accountId(String accountId) {
       query.filter(DelegateTaskKeys.accountId, accountId);
       return this;
     }
 
+    @Override
     public SelectQueryFinal uuid(String uuid) {
       query.filter(DelegateTaskKeys.uuid, uuid);
       return this;
     }
 
+    @Override
     public Query<DelegateTask> query() {
       return query;
     }
   }
 
-  List<String> queryCanonicalForms() {
+  @Override
+  public List<String> queryCanonicalForms() {
     return ImmutableList.<String>builder().build();
   }
 }
@@ -79,7 +83,7 @@ func TestSanity2(t *testing.T) {
 		Name: "Select",
 		Collection: "io.harness.beans.DelegateTask",
 		Filters: []dom.Filter{
-			{FieldType: "String", FieldName: "accountId"},
+			{FieldType: "String", FieldName: "accountId", Operation: dom.Eq},
 			{FieldType: "String", FieldName: "uuid", Operation: dom.In},
 		},
 		ProjectFields: []string{"foo", "bar"},
@@ -118,22 +122,26 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
       this.query = query;
     }
 
+    @Override
     public SelectQueryUuid accountId(String accountId) {
       query.filter(DelegateTaskKeys.accountId, accountId);
       return this;
     }
 
+    @Override
     public SelectQueryFinal uuids(Iterable<String> uuids) {
       query.field(DelegateTaskKeys.uuid).in(uuids);
       return this;
     }
 
+    @Override
     public Query<DelegateTask> query() {
       return query;
     }
   }
 
-  List<String> queryCanonicalForms() {
+  @Override
+  public List<String> queryCanonicalForms() {
     return ImmutableList.<String>builder().build();
   }
 }

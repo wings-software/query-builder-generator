@@ -30,12 +30,14 @@ const interfaceFinalTemplate = `
   }`
 
 const filterMethodTemplate = `
+    @Override
     public %sQuery%s %s(%s %s) {
       query.filter(%sKeys.%s, %s);
       return this;
     }`
 
 const filterMethodOperatorTemplate = `
+    @Override
     public %sQuery%s %s(Iterable<%s> %s) {
       query.field(%sKeys.%s).%s(%s);
       return this;
@@ -49,6 +51,7 @@ const queryImplTemplate = `
       this.query = query;
     }
 %s
+    @Override
     public Query<%s> query() {
       return query;
     }
@@ -63,7 +66,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;`
 
 const queryCanonicalFormsTemplate = `
-  List<String> queryCanonicalForms() {
+  @Override
+  public List<String> queryCanonicalForms() {
     return ImmutableList.<String>builder()%s.build();
   }`
 
@@ -145,7 +149,7 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		var currFieldName = query.Filters[i].FieldName
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
-		case dom.None:
+		case dom.Eq:
 			methods.WriteString(fmt.Sprintf(filterMethodTemplate, name, strings.Title(nextFieldName), currFieldName, currFieldType, currFieldName,
 				collectionName, currFieldName, currFieldName))
 		case dom.In:
