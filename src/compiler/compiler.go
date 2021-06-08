@@ -58,7 +58,9 @@ const importsTemplate = `import %s;
 import %s.%sKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.query.PersistentQuery;
-import org.mongodb.morphia.query.Query;`
+import org.mongodb.morphia.query.Query;
+import com.google.common.collect.ImmutableList;
+import java.util.List;`
 
 const queryCanonicalFormsTemplate = `
   List<String> queryCanonicalForms() {

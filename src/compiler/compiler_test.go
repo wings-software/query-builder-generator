@@ -25,6 +25,8 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.query.PersistentQuery;
 import org.mongodb.morphia.query.Query;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryAccountId create(HPersistence persistence) {
@@ -72,7 +74,6 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 	result := compiler.Generate(&query)
 	assert.Equal(t, expected, result)
 
-
 	query1 := dom.Query{
 		Name: "Select",
 		Collection: "io.harness.beans.DelegateTask",
@@ -89,6 +90,8 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.query.PersistentQuery;
 import org.mongodb.morphia.query.Query;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryAccountId create(HPersistence persistence) {
