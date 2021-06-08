@@ -49,11 +49,17 @@ import io.harness.persistence.HPersistence;
 import io.harness.query.PersistentQuery;
 import org.mongodb.morphia.query.Query;`
 
+const queryCanonicalFormsTemplate = `
+  List<String> queryCanonicalForms() {
+    return ImmutableList.<String>builder()%s.build();
+  }`
+
 const generatedFileTemplate = `package io.harness.beans;
 
 %s
 
 public class %s%sQuery implements PersistentQuery {%s
+%s
 %s
 %s
 }
@@ -116,5 +122,7 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 
 	var imports = fmt.Sprintf(importsTemplate, query.Collection, query.Collection, collectionName)
 
-	return fmt.Sprintf(generatedFileTemplate, imports, collectionName, name, createMethod, interfaces.String(), queryImpl)
+	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, "");
+
+	return fmt.Sprintf(generatedFileTemplate, imports, collectionName, name, createMethod, interfaces.String(), queryImpl, queryCanonicalForms)
 }

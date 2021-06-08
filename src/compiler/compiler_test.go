@@ -62,6 +62,10 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
       return query;
     }
   }
+
+  List<String> queryCanonicalForms() {
+    return ImmutableList.<String>builder().build();
+  }
 }
 `
 
