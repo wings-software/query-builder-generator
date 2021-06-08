@@ -69,8 +69,13 @@ import java.util.List;`
 const queryCanonicalFormsTemplate = `
   @Override
   public List<String> queryCanonicalForms() {
-    return ImmutableList.<String>builder()%s.build();
+    return ImmutableList.<String>builder()%s    .build();
   }`
+
+const canonicalFormTemplate=`
+      .add("collection(%s)"
+         + "\n    .filter(%s)")
+`
 
 const generatedFileTemplate = `package io.harness.beans;
 
@@ -186,7 +191,22 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 
 	var imports = fmt.Sprintf(importsTemplate, query.Collection, query.Collection, collectionName)
 
-	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, "");
+	var canonicalExpression strings.Builder
+	for i := 0; i < filtersCount; i++ {
+		if len(canonicalExpression.String()) != 0 {
+			canonicalExpression.WriteString(", ")
+		}
+		var currFieldName = query.Filters[i].FieldName
+		var currOperationType = query.Filters[i].Operation
+
+		switch currOperationType {
+		case dom.Eq:
+			canonicalExpression.WriteString(currFieldName + " = <+>")
+		case dom.In:
+			canonicalExpression.WriteString(currFieldName + " in list<+>")
+		}
+	}
+	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, fmt.Sprintf(canonicalFormTemplate, collectionName, canonicalExpression.String()))
 
 	return fmt.Sprintf(generatedFileTemplate, imports, collectionName, name, createMethod, interfaces.String(), queryImpl, queryCanonicalForms)
 }
