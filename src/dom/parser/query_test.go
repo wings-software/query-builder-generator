@@ -19,7 +19,7 @@ func TestSanityWithSingleFilter(t *testing.T) {
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
-			{FieldType: "accountId", FieldName: "string"},
+			{FieldType: "string", FieldName: "accountId"},
 		},
 	}, q)
 }
@@ -33,8 +33,8 @@ func TestSanityWithMultipleFilters(t *testing.T) {
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
-			{FieldType: "accountId", FieldName: "string"},
-			{FieldType: "delegateId", FieldName: "int"},
+			{FieldType: "string", FieldName: "accountId"},
+			{FieldType: "int", FieldName: "delegateId"},
 		},
 	}, q)
 }
@@ -48,8 +48,8 @@ func TestFiltersWithList(t *testing.T) {
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
-			{FieldType: "accountId", FieldName: "string", Operation: dom.IN},
-			{FieldType: "delegateId", FieldName: "int", Operation: dom.IN},
+			{FieldType: "string", FieldName: "accountId", Operation: dom.IN},
+			{FieldType: "int", FieldName: "delegateId", Operation: dom.IN},
 		},
 	}, q)
 }
@@ -62,7 +62,7 @@ func TestFiltersWithFullPath(t *testing.T) {
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
-			{FieldType: "accountId", FieldName: "io.harness.beans.Id", Operation: dom.EQUAL},
+			{FieldType: "io.harness.beans.Id", FieldName: "accountId", Operation: dom.EQUAL},
 		},
 	}, q)
 }

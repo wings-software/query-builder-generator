@@ -55,11 +55,11 @@ filter_list : 	filter
 
 filter      :   FILTER IDENTIFIER AS classname ';'
 		    {
-		        $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.EQUAL}
+		        $$ = dom.Filter{FieldType: $4, FieldName: $2, Operation: dom.EQUAL}
             }
             | FILTER IDENTIFIER AS IDENTIFIER FROM LIST ';'
             {
-		        $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.IN}
+		        $$ = dom.Filter{FieldType: $4, FieldName: $2, Operation: dom.IN}
             }
             ;
 
