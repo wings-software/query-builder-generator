@@ -53,7 +53,10 @@ filter_list: 	filter
 		{
 			$$ = []dom.Filter{$1}
 		}
-		| filter_list filter ;
+		| filter_list filter
+		{
+			$$ = append($1, $2)
+		};
 
 filter :	FILTER IDENTIFIER AS IDENTIFIER ';'
 		{
