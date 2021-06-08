@@ -19,6 +19,11 @@ const interfaceTemplate = `
     %sQuery%s %s(%s %s);
   }`
 
+const interfaceOperationTemplate = `
+  public interface %sQuery%s {
+    %sQuery%s %s(Iterable<%s> %s);
+  }`
+
 const interfaceFinalTemplate = `
   public interface %sQueryFinal {
     Query<%s> query();
@@ -27,6 +32,12 @@ const interfaceFinalTemplate = `
 const filterMethodTemplate = `
     public %sQuery%s %s(%s %s) {
       query.filter(%sKeys.%s, %s);
+      return this;
+    }`
+
+const filterMethodOperatorTemplate = `
+    public %sQuery%s %s(Iterable<%s> %s) {
+      query.field(%sKeys.%s).%s(%s);
       return this;
     }`
 
@@ -87,9 +98,19 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		var currFieldType = query.Filters[i].FieldType
 		var currFieldName = query.Filters[i].FieldName
 		var currFieldNameTitle = strings.Title(currFieldName)
-		interfaces.WriteString(fmt.Sprintf(interfaceTemplate, name, currFieldNameTitle, name, strings.Title(nextFieldName),
-			currFieldName, currFieldType, currFieldName))
-		interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle))
+		var currOperationType = query.Filters[i].Operation
+		switch currOperationType {
+		case dom.None:
+			interfaces.WriteString(fmt.Sprintf(interfaceTemplate, name, currFieldNameTitle, name, strings.Title(nextFieldName),
+				currFieldName, currFieldType, currFieldName))
+			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle))
+		case dom.In:
+			var pluralCurrentFieldName = currFieldName + "s"
+			interfaces.WriteString(fmt.Sprintf(interfaceOperationTemplate, name, currFieldNameTitle+"s", name, strings.Title(nextFieldName),
+				pluralCurrentFieldName, currFieldType, pluralCurrentFieldName))
+			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle+"s"))
+		}
+
 	}
 
 	interfaces.WriteString(fmt.Sprintf(interfaceFinalTemplate, name, collectionName))
@@ -107,8 +128,17 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 
 		var currFieldType = query.Filters[i].FieldType
 		var currFieldName = query.Filters[i].FieldName
-		methods.WriteString(fmt.Sprintf(filterMethodTemplate, name, strings.Title(nextFieldName), currFieldName, currFieldType, currFieldName,
-			collectionName, currFieldName, currFieldName))
+		var currOperationType = query.Filters[i].Operation
+		switch currOperationType {
+		case dom.None:
+			methods.WriteString(fmt.Sprintf(filterMethodTemplate, name, strings.Title(nextFieldName), currFieldName, currFieldType, currFieldName,
+				collectionName, currFieldName, currFieldName))
+		case dom.In:
+			var pluralCurrentFieldName = currFieldName + "s"
+			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate, name, strings.Title(nextFieldName), pluralCurrentFieldName, currFieldType,
+				pluralCurrentFieldName, collectionName, currFieldName, "in", pluralCurrentFieldName))
+
+		}
 		methods.WriteString("\n")
 	}
 
@@ -116,5 +146,6 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 
 	var imports = fmt.Sprintf(importsTemplate, query.Collection, query.Collection, collectionName)
 
+	//fmt.Print(fmt.Sprintf(generatedFileTemplate, imports, collectionName, name, createMethod, interfaces.String(), queryImpl))
 	return fmt.Sprintf(generatedFileTemplate, imports, collectionName, name, createMethod, interfaces.String(), queryImpl)
 }
