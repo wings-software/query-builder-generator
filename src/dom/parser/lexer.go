@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/query-builder-generator/src/dom"
 	"text/scanner"
 )
@@ -44,7 +43,7 @@ func (l *Lexer) Lex(lval *DomSymType) int {
 		}
 	}
 	lval.token = Token{token: tok, literal: lit}
-	fmt.Printf("Scanner: %+v, token: %+v, lit: %+v, tok: %+v \n", l.Scanner, token, lit, tok)
+	//fmt.Printf("Scanner: %+v, token: %+v, lit: %+v, tok: %+v \n", l.Scanner, token, lit, tok)
 	return tok
 }
 func (l *Lexer) Error(e string) {

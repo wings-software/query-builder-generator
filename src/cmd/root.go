@@ -2,159 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/query-builder-generator/src/compiler"
 	"os"
 	"github.com/spf13/cobra"
 	"io/ioutil"
-	"strings"
-
+    "github.com/query-builder-generator/src/dom/parser"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
-
-var outputContentWithoutDelegateId  = `
-package io.harness.beans;
-
-import io.harness.beans.DelegateTask.DelegateTaskKeys;
-import io.harness.persistence.HPersistence;
-import io.harness.query.PersistentQuery;
-
-import org.mongodb.morphia.query.Query;
-
-public class DelegateTasksQuery implements PersistentQuery {
-  private Query<DelegateTask> query;
-
-  public static DelegateTasksQuery create(HPersistence persistence) {
-    return new DelegateTasksQuery(persistence.createQuery(DelegateTask.class)
-                                      .project(DelegateTaskKeys.uuid, true)
-                                      .project(DelegateTaskKeys.data_timeout, true));
-  }
-
-  private DelegateTasksQuery(Query<DelegateTask> query) {
-    this.query = query;
-  }
-
-  public static class Final {
-    DelegateTasksQuery self;
-    Final(DelegateTasksQuery self) {
-      this.self = self;
-    }
-
-    public Query<DelegateTask> query() {
-      return self.query;
-    }
-  }
-
-  public static class FilterStatus {
-    DelegateTasksQuery self;
-    FilterStatus(DelegateTasksQuery self) {
-      this.self = self;
-    }
-
-    public Final status(DelegateTask.Status status) {
-      self.query.filter(DelegateTaskKeys.status, status);
-      return new Final(self);
-    }
-  }
-
-  public static class FilterUuids {
-    DelegateTasksQuery self;
-    FilterUuids(DelegateTasksQuery self) {
-      this.self = self;
-    }
-
-    public FilterStatus uuids(Iterable<String> uuids) {
-      self.query.field(DelegateTaskKeys.uuid).in(uuids);
-      return new FilterStatus(self);
-    }
-  }
-
-  public FilterUuids accountId(String accountId) {
-    query.filter(DelegateTaskKeys.accountId, accountId);
-    return new FilterUuids(this);
-  }
-}
-
-`
-    var outputContentWithDelegateId string = `
-package io.harness.beans;
-
-import io.harness.beans.DelegateTask.DelegateTaskKeys;
-import io.harness.persistence.HPersistence;
-import io.harness.query.PersistentQuery;
-
-import org.mongodb.morphia.query.Query;
-
-public class DelegateTasksQuery implements PersistentQuery {
-  private Query<DelegateTask> query;
-
-  public static DelegateTasksQuery create(HPersistence persistence) {
-    return new DelegateTasksQuery(persistence.createQuery(DelegateTask.class)
-                                      .project(DelegateTaskKeys.uuid, true)
-                                      .project(DelegateTaskKeys.data_timeout, true));
-  }
-
-  private DelegateTasksQuery(Query<DelegateTask> query) {
-    this.query = query;
-  }
-
-  public static class Final {
-    DelegateTasksQuery self;
-    Final(DelegateTasksQuery self) {
-      this.self = self;
-    }
-
-    public Query<DelegateTask> query() {
-      return self.query;
-    }
-  }
-
-  public static class FilterStatus {
-    DelegateTasksQuery self;
-    FilterStatus(DelegateTasksQuery self) {
-      this.self = self;
-    }
-
-    public Final status(DelegateTask.Status status) {
-      self.query.filter(DelegateTaskKeys.status, status);
-      return new Final(self);
-    }
-  }
-
-  public static class FilterDelegateId {
-    DelegateTasksQuery self;
-    FilterDelegateId(DelegateTasksQuery self) {
-      this.self = self;
-    }
-
-    public FilterStatus delegateId(String delegateId) {
-      self.query.filter(DelegateTaskKeys.delegateId, delegateId);
-      return new FilterStatus(self);
-    }
-  }
-
-  public static class FilterUuids {
-    DelegateTasksQuery self;
-    FilterUuids(DelegateTasksQuery self) {
-      this.self = self;
-    }
-
-    public FilterDelegateId uuids(Iterable<String> uuids) {
-      self.query.field(DelegateTaskKeys.uuid).in(uuids);
-      return new FilterDelegateId(self);
-    }
-  }
-
-  public FilterUuids accountId(String accountId) {
-    query.filter(DelegateTaskKeys.accountId, accountId);
-    return new FilterUuids(this);
-  }
-}
-`
-
-
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -184,12 +41,9 @@ func generateFile(cmd *cobra.Command) error {
         fmt.Println(err)
     }
 
-    var outputContent = ""
-    if strings.Contains(string(data), "filter String delegateId") {
-        outputContent = outputContentWithDelegateId;
-    } else {
-        outputContent = outputContentWithoutDelegateId;
-    }
+    var query = parser.Parse(string(data))
+    var compiler = compiler.Compiler{}
+    var outputContent = compiler.Generate(&query)
 
     fmt.Println("Writing file at path [" + outputFilePath +"]")
     err = ioutil.WriteFile(outputFilePath, []byte(outputContent), 0777)

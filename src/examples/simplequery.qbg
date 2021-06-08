@@ -1,0 +1,5 @@
+query Select for io.harness.beans.DelegateTask
+{
+    filter accountId as string from list ;
+    filter delegateId as int from list ;
+}
