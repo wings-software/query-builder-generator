@@ -16,7 +16,7 @@ type Token struct {
     classname string
     filters []dom.Filter
     filter dom.Filter
-    qprojections string
+    projectfields []string
 }
 
 %token <query> QUERY
@@ -32,13 +32,13 @@ type Token struct {
 %type <classname> classname
 %type <filters> filter_list
 %type <filter> filter
-//%type <qprojections> qprojections
+%type <projectfields> projectfields
 
 %%
 
-query     :	QUERY IDENTIFIER FOR classname '{' filter_list '}'
+query     :	QUERY IDENTIFIER FOR classname '{' filter_list projectfields '}'
         	{
-		    $$ = dom.Query{Name: $2, Collection: $4, Filters: $6}
+		    $$ = dom.Query{Name: $2, Collection: $4, Filters: $6, ProjectFields: $7}
 		    Domlex.(*Lexer).result = $$
 		} ;
 
@@ -69,4 +69,8 @@ filter :	FILTER IDENTIFIER AS IDENTIFIER ';'
 		    $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.IN}
                 } ;
 
+projectfields: PROJECT IDENTIFIER ';'
+		{
+			$$ = []string{$2}
+		}
 %%

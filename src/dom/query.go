@@ -4,5 +4,5 @@ type Query struct {
 	Name          string
 	Collection    string
 	Filters 	[]Filter
-	ProjectFields string
+	ProjectFields []string
 }

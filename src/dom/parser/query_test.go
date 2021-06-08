@@ -47,3 +47,13 @@ func TestSanityWithMultipleFiltersWithList(t *testing.T) {
 			dom.Filter{FieldType: "delegateId", FieldName: "int", Operation: dom.IN}}}, q)
 }
 
+func TestSanityWithSingleFilterAndProject(t *testing.T) {
+	q := Parse(`query Select for io.harness.beans.DelegateTasks 
+					{
+						filter accountId as string ;
+						project id ;
+					}`)
+	assert.Equal(t, dom.Query{Name: "Select",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters:    []dom.Filter{dom.Filter{FieldType: "accountId", FieldName: "string"}}, ProjectFields: []string{"id"}}, q)
+}
