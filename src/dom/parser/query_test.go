@@ -1,5 +1,3 @@
-//go:generate goyacc -o query.y.go -p Dom query.y
-
 package parser
 
 import (
@@ -8,19 +6,22 @@ import (
 	"testing"
 )
 
-func TestSanity(t *testing.T) {
-	q := Parse("query DelegateTask for io.harness.beans.DelegateTasks {}")
-	assert.Equal(t, dom.Query{Name: "DelegateTask", Collection: "io.harness.beans.DelegateTasks"}, q)
-}
+//func TestSanity(t *testing.T) {
+//	q := Parse("query DelegateTask for io.harness.beans.DelegateTasks {}")
+//	assert.Equal(t, dom.Query{Name: "DelegateTask", Collection: "io.harness.beans.DelegateTasks"}, q)
+//}
 
 func TestSanityWithSingleFilter(t *testing.T) {
-	q := Parse("query DelegateTask for io.harness.beans.DelegateTasks " +
-		"{" +
-		"filter accountId as string ;" +
-		" }")
+	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
+		{
+			filter accountId as string;
+		}`)
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
-		Filters:    []dom.Filter{dom.Filter{FieldType: "accountId", FieldName: "string"}}}, q)
+		Filters: []dom.Filter{
+			{FieldType: "accountId", FieldName: "string"},
+		},
+	}, q)
 }
 
 func TestSanityWithMultipleFilters(t *testing.T) {
@@ -31,11 +32,14 @@ func TestSanityWithMultipleFilters(t *testing.T) {
 					}`)
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
-		Filters: []dom.Filter{dom.Filter{FieldType: "accountId", FieldName: "string"},
-			dom.Filter{FieldType: "delegateId", FieldName: "int"}}}, q)
+		Filters: []dom.Filter{
+			{FieldType: "accountId", FieldName: "string"},
+			{FieldType: "delegateId", FieldName: "int"},
+		},
+	}, q)
 }
 
-func TestSanityWithMultipleFiltersWithList(t *testing.T) {
+func TestFiltersWithList(t *testing.T) {
 	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
 					{
 						filter accountId as string from list ;
@@ -43,7 +47,22 @@ func TestSanityWithMultipleFiltersWithList(t *testing.T) {
 					}`)
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
-		Filters: []dom.Filter{dom.Filter{FieldType: "accountId", FieldName: "string", Operation: dom.IN},
-			dom.Filter{FieldType: "delegateId", FieldName: "int", Operation: dom.IN}}}, q)
+		Filters: []dom.Filter{
+			{FieldType: "accountId", FieldName: "string", Operation: dom.IN},
+			{FieldType: "delegateId", FieldName: "int", Operation: dom.IN},
+		},
+	}, q)
 }
 
+func TestFiltersWithFullPath(t *testing.T) {
+	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
+					{
+						filter accountId as io.harness.beans.Id;
+					}`)
+	assert.Equal(t, dom.Query{Name: "DelegateTask",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters: []dom.Filter{
+			{FieldType: "accountId", FieldName: "io.harness.beans.Id", Operation: dom.EQUAL},
+		},
+	}, q)
+}

@@ -36,37 +36,41 @@ type Token struct {
 
 %%
 
-query     :	QUERY IDENTIFIER FOR classname '{' filter_list '}'
-        	{
-		    $$ = dom.Query{Name: $2, Collection: $4, Filters: $6}
-		    Domlex.(*Lexer).result = $$
-		} ;
+query       :   QUERY IDENTIFIER FOR classname '{' filter_list '}'
+            {
+                $$ = dom.Query{Name: $2, Collection: $4, Filters: $6}
+                Domlex.(*Lexer).result = $$
+            }
+            ;
 
-classname :	IDENTIFIER
-            	{
-                    $$ = $1
-            	}
-            	| classname '.' IDENTIFIER
-            	{
-            	    $$ = fmt.Sprintf("%s.%s", $1, $3)
-            	} ;
+filter_list : 	filter
+            {
+                $$ = []dom.Filter{$1}
+		    }
+            | filter_list filter
+            {
+			    $$ = append($1, $2)
+		    }
+		    ;
 
-filter_list: 	filter
-		{
-			$$ = []dom.Filter{$1}
-		}
-		| filter_list filter
-		{
-			$$ = append($1, $2)
-		};
+filter      :   FILTER IDENTIFIER AS classname ';'
+		    {
+		        $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.EQUAL}
+            }
+            | FILTER IDENTIFIER AS IDENTIFIER FROM LIST ';'
+            {
+		        $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.IN}
+            }
+            ;
 
-filter :	FILTER IDENTIFIER AS IDENTIFIER ';'
-		{
-		    $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.EQUAL}
-                }
-                | FILTER IDENTIFIER AS IDENTIFIER FROM LIST ';'
-		{
-		    $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.IN}
-                } ;
+classname   :   IDENTIFIER
+            {
+                $$ = $1
+            }
+            | classname '.' IDENTIFIER
+            {
+                $$ = fmt.Sprintf("%s.%s", $1, $3)
+            }
+            ;
 
 %%
