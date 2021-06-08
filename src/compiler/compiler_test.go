@@ -167,7 +167,8 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
   public List<String> queryCanonicalForms() {
     return ImmutableList.<String>builder()
       .add("collection(DelegateTask)"
-         + "\n    .filter(orange in list<+>, worm = <+>, apple in list<+>, banana in list<+>)")
+         + "\n    .filter(orange in list<+>, worm = <+>, apple in list<+>, banana in list<+>)"
+         + "\n    .project(foo, bar)")
     .build();
   }
 }

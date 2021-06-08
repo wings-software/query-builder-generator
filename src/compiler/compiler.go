@@ -74,7 +74,7 @@ const queryCanonicalFormsTemplate = `
 
 const canonicalFormTemplate=`
       .add("collection(%s)"
-         + "\n    .filter(%s)")
+         + "\n    .filter(%s)"%s)
 `
 
 const generatedFileTemplate = `package io.harness.beans;
@@ -206,7 +206,24 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 			canonicalExpression.WriteString(currFieldName + " in list<+>")
 		}
 	}
-	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, fmt.Sprintf(canonicalFormTemplate, collectionName, canonicalExpression.String()))
+
+
+
+	var canonicalProjections strings.Builder
+	if query.ProjectFields != nil && len(query.ProjectFields) !=0 {
+		for _, field := range query.ProjectFields {
+			if len(canonicalProjections.String()) != 0 {
+				canonicalProjections.WriteString(", ")
+			} else {
+				canonicalProjections.WriteString("\n         + \"\\n    .project(")
+			}
+			canonicalProjections.WriteString(field)
+		}
+		canonicalProjections.WriteString(")\"")
+	}
+
+
+	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, fmt.Sprintf(canonicalFormTemplate, collectionName, canonicalExpression.String(), canonicalProjections.String()))
 
 	return fmt.Sprintf(generatedFileTemplate, imports, collectionName, name, createMethod, interfaces.String(), queryImpl, queryCanonicalForms)
 }
