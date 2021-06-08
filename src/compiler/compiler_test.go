@@ -83,8 +83,8 @@ func TestSanity2(t *testing.T) {
 		Name: "Select",
 		Collection: "io.harness.beans.DelegateTask",
 		Filters: []dom.Filter{
-			{FieldType: "String", FieldName: "accountId", Operation: dom.Eq},
 			{FieldType: "String", FieldName: "uuid", Operation: dom.In},
+			{FieldType: "String", FieldName: "accountId", Operation: dom.Eq},
 		},
 		ProjectFields: []string{"foo", "bar"},
 	}
@@ -99,23 +99,23 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
-  public static SelectQueryAccountId create(HPersistence persistence) {
+  public static SelectQueryUuids create(HPersistence persistence) {
     return new QueryImpl(persistence.createQuery(DelegateTask.class)
                                     .project(DelegateTaskKeys.foo, true)
                                     .project(DelegateTaskKeys.bar, true));
   }
 
-  public interface SelectQueryAccountId {
-    SelectQueryUuid accountId(String accountId);
-  }
   public interface SelectQueryUuids {
-    SelectQueryFinal uuids(Iterable<String> uuids);
+    SelectQueryAccountId uuids(Iterable<String> uuids);
+  }
+  public interface SelectQueryAccountId {
+    SelectQueryFinal accountId(String accountId);
   }
   public interface SelectQueryFinal {
     Query<DelegateTask> query();
   }
 
-  private static class QueryImpl implements SelectQueryAccountId, SelectQueryUuids, SelectQueryFinal {
+  private static class QueryImpl implements SelectQueryUuids, SelectQueryAccountId, SelectQueryFinal {
     Query<DelegateTask> query;
 
     private QueryImpl(Query<DelegateTask> query) {
@@ -123,14 +123,14 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
     }
 
     @Override
-    public SelectQueryUuid accountId(String accountId) {
-      query.filter(DelegateTaskKeys.accountId, accountId);
+    public SelectQueryAccountId uuids(Iterable<String> uuids) {
+      query.field(DelegateTaskKeys.uuid).in(uuids);
       return this;
     }
 
     @Override
-    public SelectQueryFinal uuids(Iterable<String> uuids) {
-      query.field(DelegateTaskKeys.uuid).in(uuids);
+    public SelectQueryFinal accountId(String accountId) {
+      query.filter(DelegateTaskKeys.accountId, accountId);
       return this;
     }
 

@@ -162,3 +162,10 @@ go_repository(
     sum = "h1:Hbg2NidpLE8veEBkEZTL3CvlkUIVzuU9jDplZO54c48=",
     version = "v0.2.0",
 )
+
+go_repository(
+    name = "com_github_gertd_go_pluralize",
+    importpath = "github.com/gertd/go-pluralize",
+    sum = "h1:RgvJTJ5W7olOoAks97BOwOlekBFsLEyh00W48Z6ZEZY=",
+    version = "v0.1.7",
+)

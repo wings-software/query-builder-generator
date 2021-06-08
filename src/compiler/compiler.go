@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"github.com/query-builder-generator/src/dom"
+	pluralize "github.com/gertd/go-pluralize"
 	"strings"
 )
 
@@ -90,6 +91,8 @@ func (compiler *Compiler) collectionName(collection string) string {
 func (compiler *Compiler) Generate(query *dom.Query) string {
 	fmt.Println("Generating Java File")
 
+	var pluralize = pluralize.NewClient()
+
 	var name = query.Name
 	var collectionName = compiler.collectionName(query.Collection)
 
@@ -100,7 +103,12 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		}
 	}
 
-	createMethod := fmt.Sprintf(createTemplate, name, strings.Title(query.Filters[0].FieldName), collectionName, projections.String())
+	var titleFieldName = strings.Title(query.Filters[0].FieldName)
+	if query.Filters[0].Operation == dom.In {
+		titleFieldName = pluralize.Plural(titleFieldName)
+	}
+
+	createMethod := fmt.Sprintf(createTemplate, name, titleFieldName, collectionName, projections.String())
 
 	var interfaces strings.Builder
 	var interfaceNames strings.Builder
@@ -108,10 +116,16 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	var filtersCount = len(query.Filters)
 	for i := 0; i < filtersCount; i++ {
 		var nextFieldName = ""
+		var titleNextFieldName = ""
 		if i == filtersCount-1 {
 			nextFieldName = "Final"
+			titleNextFieldName = "Final"
 		} else {
 			nextFieldName = query.Filters[i+1].FieldName
+			titleNextFieldName = strings.Title(nextFieldName)
+			if query.Filters[i+1].Operation == dom.In {
+				titleNextFieldName = pluralize.Plural(titleNextFieldName)
+			}
 		}
 
 		var currFieldType = query.Filters[i].FieldType
@@ -120,14 +134,15 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
 		case dom.Eq:
-			interfaces.WriteString(fmt.Sprintf(interfaceTemplate, name, currFieldNameTitle, name, strings.Title(nextFieldName),
+			interfaces.WriteString(fmt.Sprintf(interfaceTemplate, name, currFieldNameTitle, name, titleNextFieldName,
 				currFieldName, currFieldType, currFieldName))
 			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle))
 		case dom.In:
-			var pluralCurrentFieldName = currFieldName + "s"
-			interfaces.WriteString(fmt.Sprintf(interfaceOperationTemplate, name, currFieldNameTitle+"s", name, strings.Title(nextFieldName),
+			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
+			var pluralCurrentFieldNameTitle = pluralize.Plural(currFieldNameTitle)
+			interfaces.WriteString(fmt.Sprintf(interfaceOperationTemplate, name, pluralCurrentFieldNameTitle, name, titleNextFieldName,
 				pluralCurrentFieldName, currFieldType, pluralCurrentFieldName))
-			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle+"s"))
+			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, pluralCurrentFieldNameTitle))
 		}
 
 	}
@@ -153,7 +168,7 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 			methods.WriteString(fmt.Sprintf(filterMethodTemplate, name, strings.Title(nextFieldName), currFieldName, currFieldType, currFieldName,
 				collectionName, currFieldName, currFieldName))
 		case dom.In:
-			var pluralCurrentFieldName = currFieldName + "s"
+			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
 			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate, name, strings.Title(nextFieldName), pluralCurrentFieldName, currFieldType,
 				pluralCurrentFieldName, collectionName, currFieldName, "in", pluralCurrentFieldName))
 
