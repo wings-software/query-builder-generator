@@ -3,15 +3,17 @@
 package parser
 
 import (
+	"github.com/query-builder-generator/src/dom"
+	"github.com/stretchr/testify/assert"
 	"testing"
-  "github.com/stretchr/testify/assert"
 )
 
 func TestSanity(t *testing.T) {
-	vars := map[string]interface{}{
-		"A": 1,
-		"B": 1,
-	}
-	f := Parse("NOT (A IS B)", vars)
-	assert.Equal(t, f, false)
+	q := Parse("query foo {}")
+	assert.Equal(t, dom.Query{Name: "foo"}, q)
 }
+
+//func TestSanity1(t *testing.T) {
+//	doc := Parse("query foo {}")
+//	assert.Equal(t, doc.queries[0].name, "foo")
+//}

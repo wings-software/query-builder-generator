@@ -1,5 +1,5 @@
 package dom
 
-type  Query struct {
-	filters []Filter
+type Query struct {
+	Name string
 }

@@ -9,8 +9,11 @@ go_yacc(
 
 go_library(
     name = "go_default_library",
-    srcs = ["query.y.go"],
-    importpath = "github.com/query-builder-generator/src/dom",
+    srcs = glob(["*.go"],exclude=["*_test.go"])+ ["query.y.go"],
+    importpath = "github.com/query-builder-generator/src/dom/parser",
+    deps = [
+        "//src/dom:go_default_library",
+    ],
     visibility = ["//visibility:public"],
 )
 
