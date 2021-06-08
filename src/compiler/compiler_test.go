@@ -70,7 +70,10 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 
   @Override
   public List<String> queryCanonicalForms() {
-    return ImmutableList.<String>builder().build();
+    return ImmutableList.<String>builder()
+      .add("collection(DelegateTask)"
+         + "\n    .filter(accountId = <+>, uuid = <+>)")
+    .build();
   }
 }
 `
@@ -162,7 +165,10 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 
   @Override
   public List<String> queryCanonicalForms() {
-    return ImmutableList.<String>builder().build();
+    return ImmutableList.<String>builder()
+      .add("collection(DelegateTask)"
+         + "\n    .filter(orange in list<+>, worm = <+>, apple in list<+>, banana in list<+>)")
+    .build();
   }
 }
 `
