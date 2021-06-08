@@ -1,5 +1,4 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
-load("//:bazel/yacc.bzl", "go_yacc")
 
 go_library(
     name = "go_default_library",
