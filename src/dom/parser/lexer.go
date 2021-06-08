@@ -34,6 +34,10 @@ func (l *Lexer) Lex(lval *DomSymType) int {
 			tok = FILTER
 		case "as":
 			tok = AS
+		case "from":
+			tok = FROM
+		case "list":
+			tok = LIST
 		default:
 			tok = IDENTIFIER
 			lval.identifier = lit

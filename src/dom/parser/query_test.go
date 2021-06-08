@@ -27,10 +27,23 @@ func TestSanityWithMultipleFilters(t *testing.T) {
 	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
 					{
 						filter accountId as string ;
-						filter delegateId as int ;
+						filter delegateId as int;
 					}`)
 	assert.Equal(t, dom.Query{Name: "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{dom.Filter{FieldType: "accountId", FieldName: "string"},
 			dom.Filter{FieldType: "delegateId", FieldName: "int"}}}, q)
 }
+
+func TestSanityWithMultipleFiltersWithList(t *testing.T) {
+	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
+					{
+						filter accountId as string from list ;
+						filter delegateId as int from list;
+					}`)
+	assert.Equal(t, dom.Query{Name: "DelegateTask",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters: []dom.Filter{dom.Filter{FieldType: "accountId", FieldName: "string", Operation: dom.IN},
+			dom.Filter{FieldType: "delegateId", FieldName: "int", Operation: dom.IN}}}, q)
+}
+

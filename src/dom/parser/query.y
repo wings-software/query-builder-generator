@@ -25,6 +25,8 @@ type Token struct {
 %token PROJECT
 %token FILTER
 %token AS
+%token FROM
+%token LIST
 
 %type <query> query
 %type <classname> classname
@@ -60,7 +62,11 @@ filter_list: 	filter
 
 filter :	FILTER IDENTIFIER AS IDENTIFIER ';'
 		{
-		    $$ = dom.Filter{FieldType: $2, FieldName: $4}
+		    $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.EQUAL}
+                }
+                | FILTER IDENTIFIER AS IDENTIFIER FROM LIST ';'
+		{
+		    $$ = dom.Filter{FieldType: $2, FieldName: $4, Operation: dom.IN}
                 } ;
 
 %%
