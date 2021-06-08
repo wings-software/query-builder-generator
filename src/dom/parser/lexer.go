@@ -19,6 +19,7 @@ func (l *Lexer) Lex(lval *DomSymType) int {
 	switch tok {
 	case -1:
 	case 46:
+	case 59:
 	case 123:
 	case 125:
 	default:

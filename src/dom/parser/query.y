@@ -14,7 +14,8 @@ type Token struct {
     query dom.Query
     identifier string
     classname string
-    filters []string
+    filters []dom.Filter
+    filter dom.Filter
     qprojections string
 }
 
@@ -27,14 +28,15 @@ type Token struct {
 
 %type <query> query
 %type <classname> classname
-%type <filters> filters
-%type <qprojections> qprojections
+%type <filters> filter_list
+%type <filter> filter
+//%type <qprojections> qprojections
 
 %%
 
-query     :	QUERY IDENTIFIER FOR classname '{' filters PROJECT '{' qprojections '}' '}'
+query     :	QUERY IDENTIFIER FOR classname '{' filter_list '}'
         	{
-		    $$ = dom.Query{Name: $2, Collection: $4, QueryStmtType: $6, ProjectFields: $9}
+		    $$ = dom.Query{Name: $2, Collection: $4, Filters: $6}
 		    Domlex.(*Lexer).result = $$
 		} ;
 
@@ -47,14 +49,15 @@ classname :	IDENTIFIER
             	    $$ = fmt.Sprintf("%s.%s", $1, $3)
             	} ;
 
-filters :	FILTER IDENTIFIER AS IDENTIFIER
+filter_list: 	filter
 		{
-                    $$ = fmt.Sprintf("{%s %s}", $2, $4)
-                } ;
+			$$ = []dom.Filter{$1}
+		}
+		| filter_list filter ;
 
-qprojections :  IDENTIFIER
+filter :	FILTER IDENTIFIER AS IDENTIFIER ';'
 		{
-			$$ = $1
-		} ;
+		    $$ = dom.Filter{FieldType: $2, FieldName: $4}
+                } ;
 
 %%

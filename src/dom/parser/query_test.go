@@ -13,11 +13,12 @@ func TestSanity(t *testing.T) {
 	assert.Equal(t, dom.Query{Name: "DelegateTask", Collection: "io.harness.beans.DelegateTasks"}, q)
 }
 
-func TestSanityWithStatements(t *testing.T) {
+func TestSanityWithSingleFilter(t *testing.T) {
 	q := Parse("query DelegateTask for io.harness.beans.DelegateTasks " +
 		"{" +
-		"filter accountId as string " +
-		"project {  uuid  }" +
+		"filter accountId as string ;" +
 		" }")
-	assert.Equal(t, dom.Query{Name: "DelegateTask", Collection: "io.harness.beans.DelegateTasks", QueryStmtType: "{filter string accountId}", ProjectFields:"uuid"},  q)
+	assert.Equal(t, dom.Query{Name: "DelegateTask",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters:    []dom.Filter{dom.Filter{FieldType: "accountId", FieldName: "string"}}}, q)
 }
