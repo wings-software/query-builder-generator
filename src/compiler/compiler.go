@@ -154,10 +154,16 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	var methods strings.Builder
 	for i := 0; i < filtersCount; i++ {
 		var nextFieldName = ""
+		var titleNextFieldName = ""
 		if i == filtersCount-1 {
 			nextFieldName = "Final"
+			titleNextFieldName = "Final"
 		} else {
 			nextFieldName = query.Filters[i+1].FieldName
+			titleNextFieldName = strings.Title(nextFieldName)
+			if query.Filters[i+1].Operation == dom.In {
+				titleNextFieldName = pluralize.Plural(titleNextFieldName)
+			}
 		}
 
 		var currFieldType = query.Filters[i].FieldType
@@ -165,11 +171,11 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
 		case dom.Eq:
-			methods.WriteString(fmt.Sprintf(filterMethodTemplate, name, strings.Title(nextFieldName), currFieldName, currFieldType, currFieldName,
+			methods.WriteString(fmt.Sprintf(filterMethodTemplate, name, titleNextFieldName, currFieldName, currFieldType, currFieldName,
 				collectionName, currFieldName, currFieldName))
 		case dom.In:
 			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
-			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate, name, strings.Title(nextFieldName), pluralCurrentFieldName, currFieldType,
+			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate, name, titleNextFieldName, pluralCurrentFieldName, currFieldType,
 				pluralCurrentFieldName, collectionName, currFieldName, "in", pluralCurrentFieldName))
 
 		}

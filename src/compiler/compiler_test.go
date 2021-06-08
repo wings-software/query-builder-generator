@@ -83,8 +83,10 @@ func TestSanity2(t *testing.T) {
 		Name: "Select",
 		Collection: "io.harness.beans.DelegateTask",
 		Filters: []dom.Filter{
-			{FieldType: "String", FieldName: "uuid", Operation: dom.In},
-			{FieldType: "String", FieldName: "accountId", Operation: dom.Eq},
+			{FieldType: "String", FieldName: "orange", Operation: dom.In},
+			{FieldType: "String", FieldName: "worm", Operation: dom.Eq},
+			{FieldType: "String", FieldName: "apple", Operation: dom.In},
+			{FieldType: "String", FieldName: "banana", Operation: dom.In},
 		},
 		ProjectFields: []string{"foo", "bar"},
 	}
@@ -99,23 +101,29 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
-  public static SelectQueryUuids create(HPersistence persistence) {
+  public static SelectQueryOranges create(HPersistence persistence) {
     return new QueryImpl(persistence.createQuery(DelegateTask.class)
                                     .project(DelegateTaskKeys.foo, true)
                                     .project(DelegateTaskKeys.bar, true));
   }
 
-  public interface SelectQueryUuids {
-    SelectQueryAccountId uuids(Iterable<String> uuids);
+  public interface SelectQueryOranges {
+    SelectQueryWorm oranges(Iterable<String> oranges);
   }
-  public interface SelectQueryAccountId {
-    SelectQueryFinal accountId(String accountId);
+  public interface SelectQueryWorm {
+    SelectQueryApples worm(String worm);
+  }
+  public interface SelectQueryApples {
+    SelectQueryBananas apples(Iterable<String> apples);
+  }
+  public interface SelectQueryBananas {
+    SelectQueryFinal bananas(Iterable<String> bananas);
   }
   public interface SelectQueryFinal {
     Query<DelegateTask> query();
   }
 
-  private static class QueryImpl implements SelectQueryUuids, SelectQueryAccountId, SelectQueryFinal {
+  private static class QueryImpl implements SelectQueryOranges, SelectQueryWorm, SelectQueryApples, SelectQueryBananas, SelectQueryFinal {
     Query<DelegateTask> query;
 
     private QueryImpl(Query<DelegateTask> query) {
@@ -123,14 +131,26 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
     }
 
     @Override
-    public SelectQueryAccountId uuids(Iterable<String> uuids) {
-      query.field(DelegateTaskKeys.uuid).in(uuids);
+    public SelectQueryWorm oranges(Iterable<String> oranges) {
+      query.field(DelegateTaskKeys.orange).in(oranges);
       return this;
     }
 
     @Override
-    public SelectQueryFinal accountId(String accountId) {
-      query.filter(DelegateTaskKeys.accountId, accountId);
+    public SelectQueryApples worm(String worm) {
+      query.filter(DelegateTaskKeys.worm, worm);
+      return this;
+    }
+
+    @Override
+    public SelectQueryBananas apples(Iterable<String> apples) {
+      query.field(DelegateTaskKeys.apple).in(apples);
+      return this;
+    }
+
+    @Override
+    public SelectQueryFinal bananas(Iterable<String> bananas) {
+      query.field(DelegateTaskKeys.banana).in(bananas);
       return this;
     }
 
