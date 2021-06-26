@@ -6,3 +6,9 @@ type Query struct {
 	Filters 	[]Filter
 	ProjectFields []string
 }
+
+func (query Query) Init() {
+	for i := range query.Filters {
+		query.Filters[i].Query = &query
+	}
+}

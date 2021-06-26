@@ -41,11 +41,13 @@ type Token struct {
 query       :   QUERY IDENTIFIER FOR classname '{' filter_list '}'
             {
                 $$ = dom.Query{Name: $2, Collection: $4, Filters: $6 }
+                $$.Init()
                 Domlex.(*Lexer).result = $$
             }
             |   QUERY IDENTIFIER FOR classname '{' filter_list projectfield_list '}'
             {
                 $$ = dom.Query{Name: $2, Collection: $4, Filters: $6, ProjectFields: $7}
+                $$.Init()
                 Domlex.(*Lexer).result = $$
             }
             ;

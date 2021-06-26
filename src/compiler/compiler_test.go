@@ -15,6 +15,7 @@ func TestSanity1(t *testing.T) {
 			{FieldType: "String", FieldName: "uuid", Operation: dom.Eq},
 		},
 	}
+	query.Init()
 
 	compiler := Compiler{}
 
@@ -90,6 +91,8 @@ func TestSanity2(t *testing.T) {
 		},
 		ProjectFields: []string{"foo", "bar"},
 	}
+	query.Init()
+
 	expected := `package io.harness.beans;
 
 import io.harness.beans.DelegateTask;

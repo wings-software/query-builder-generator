@@ -2,8 +2,9 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/query-builder-generator/src/dom"
 	pluralize "github.com/gertd/go-pluralize"
+	"github.com/query-builder-generator/src/compiler/java"
+	"github.com/query-builder-generator/src/dom"
 	"strings"
 )
 
@@ -16,7 +17,7 @@ const createTemplate = `
   }`
 
 const interfaceTemplate = `
-  public interface %sQuery%s {
+  public interface %s {
     %sQuery%s %s(%s %s);
   }`
 
@@ -128,13 +129,16 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 			}
 		}
 
+		var currentInterface java.Interface
+		currentInterface = query.Filters[i]
+
 		var currFieldType = query.Filters[i].FieldType
 		var currFieldName = query.Filters[i].FieldName
 		var currFieldNameTitle = strings.Title(currFieldName)
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
 		case dom.Eq:
-			interfaces.WriteString(fmt.Sprintf(interfaceTemplate, name, currFieldNameTitle, name, titleNextFieldName,
+			interfaces.WriteString(fmt.Sprintf(interfaceTemplate, currentInterface.InterfaceName(), name, titleNextFieldName,
 				currFieldName, currFieldType, currFieldName))
 			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle))
 		case dom.In:
