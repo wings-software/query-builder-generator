@@ -12,7 +12,7 @@ type Compiler struct {
 }
 
 const createTemplate = `
-  public static %sQuery%s create(HPersistence persistence) {
+  public static %s create(HPersistence persistence) {
     return new QueryImpl(persistence.createQuery(%s.class)%s);
   }`
 
@@ -22,12 +22,12 @@ const interfaceTemplate = `
   }`
 
 const interfaceOperationTemplate = `
-  public interface %sQuery%s {
+  public interface %s {
     %s %s(Iterable<%s> %s);
   }`
 
 const interfaceFinalTemplate = `
-  public interface %sQueryFinal {
+  public interface %s {
     Query<%s> query();
   }`
 
@@ -114,7 +114,7 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		titleFieldName = pluralize.Plural(titleFieldName)
 	}
 
-	createMethod := fmt.Sprintf(createTemplate, name, titleFieldName, collectionName, projections.String())
+	createMethod := fmt.Sprintf(createTemplate, query.Filters[0].InterfaceName(), collectionName, projections.String())
 
 	var interfaces strings.Builder
 	var interfaceNames strings.Builder
@@ -123,6 +123,9 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	for i := 0; i < filtersCount; i++ {
 		var currentInterface java.Interface
 		currentInterface = query.Filters[i]
+
+		interfaceNames.WriteString(currentInterface.InterfaceName())
+		interfaceNames.WriteString(", ")
 
 		var nextInterface java.Interface
 		if i == filtersCount-1 {
@@ -133,27 +136,23 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 
 		var currFieldType = query.Filters[i].FieldType
 		var currFieldName = query.Filters[i].FieldName
-		var currFieldNameTitle = strings.Title(currFieldName)
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
 		case dom.Eq:
 			interfaces.WriteString(fmt.Sprintf(interfaceTemplate,
 				currentInterface.InterfaceName(), nextInterface.InterfaceName(),
 				currFieldName, currFieldType, currFieldName))
-			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle))
 		case dom.In:
 			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
-			var pluralCurrentFieldNameTitle = pluralize.Plural(currFieldNameTitle)
 			interfaces.WriteString(fmt.Sprintf(interfaceOperationTemplate,
-				name, pluralCurrentFieldNameTitle, nextInterface.InterfaceName(),
+				currentInterface.InterfaceName(), nextInterface.InterfaceName(),
 				pluralCurrentFieldName, currFieldType, pluralCurrentFieldName))
-			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, pluralCurrentFieldNameTitle))
 		}
 
 	}
 
-	interfaces.WriteString(fmt.Sprintf(interfaceFinalTemplate, name, collectionName))
-	interfaceNames.WriteString(fmt.Sprintf("%sQuery%s", name, "Final"))
+	interfaces.WriteString(fmt.Sprintf(interfaceFinalTemplate, query.InterfaceName(), collectionName))
+	interfaceNames.WriteString(query.InterfaceName())
 
 	// Generate #3
 	var methods strings.Builder
