@@ -41,9 +41,9 @@ func generateFile(cmd *cobra.Command) error {
         fmt.Println(err)
     }
 
-    var query = parser.Parse(string(data))
+    var document = parser.Parse(string(data))
     var compiler = compiler.Compiler{}
-    var outputContent = compiler.Generate(&query)
+    var outputContent = compiler.Generate(&document)
 
     fmt.Println("Writing file at path [" + outputFilePath +"]")
     err = ioutil.WriteFile(outputFilePath, []byte(outputContent), 0777)

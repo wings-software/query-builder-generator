@@ -68,7 +68,7 @@ const queryCanonicalFormsTemplate = `
     return ImmutableList.<String>builder()%s    .build();
   }`
 
-const canonicalFormTemplate=`
+const canonicalFormTemplate = `
       .add("collection(%s)"
          + "\n    .filter(%s)"%s)
 `
@@ -89,10 +89,12 @@ func (compiler *Compiler) collectionName(collection string) string {
 	return ss[len(ss)-1]
 }
 
-func (compiler *Compiler) Generate(query *dom.Query) string {
+func (compiler *Compiler) Generate(document *dom.Document) string {
 	fmt.Println("Generating Java File")
 
 	var pluralize = pluralize.NewClient()
+
+	var query = document.Queries[0]
 
 	var name = query.Name
 	var collectionName = compiler.collectionName(query.Collection)
@@ -151,7 +153,6 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate,
 				nextInterface.InterfaceName(), currentMethod.MethodPrototype(),
 				collectionName, currFieldName, "in", pluralCurrentFieldName))
-
 		}
 		methods.WriteString("\n")
 	}
@@ -180,7 +181,7 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	}
 
 	var canonicalProjections strings.Builder
-	if query.ProjectFields != nil && len(query.ProjectFields) !=0 {
+	if query.ProjectFields != nil && len(query.ProjectFields) != 0 {
 		for _, field := range query.ProjectFields {
 			if len(canonicalProjections.String()) != 0 {
 				canonicalProjections.WriteString(", ")
@@ -191,7 +192,6 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		}
 		canonicalProjections.WriteString(")\"")
 	}
-
 
 	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, fmt.Sprintf(canonicalFormTemplate, collectionName, canonicalExpression.String(), canonicalProjections.String()))
 

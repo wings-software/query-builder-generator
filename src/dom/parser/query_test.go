@@ -12,7 +12,7 @@ import (
 //}
 
 func TestSanityWithSingleFilter(t *testing.T) {
-	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
+	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
 		{
 			filter accountId as string ;
 		}`)
@@ -26,11 +26,11 @@ func TestSanityWithSingleFilter(t *testing.T) {
 	}
 	query.Init()
 
-	assert.Equal(t, query, q)
+	assert.Equal(t, query, document.Queries[0])
 }
 
 func TestSanityWithMultipleFilters(t *testing.T) {
-	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
+	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
 					{
 						filter accountId as string ;
 						filter delegateId as int ;
@@ -46,11 +46,11 @@ func TestSanityWithMultipleFilters(t *testing.T) {
 	}
 	query.Init()
 
-	assert.Equal(t, query, q)
+	assert.Equal(t, query, document.Queries[0])
 }
 
 func TestFiltersWithList(t *testing.T) {
-	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
+	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
 					{
 						filter accountId as io.harness.beans.Id from list ;
 						filter delegateId as int from list ;
@@ -66,11 +66,11 @@ func TestFiltersWithList(t *testing.T) {
 	}
 	query.Init()
 
-	assert.Equal(t, query, q)
+	assert.Equal(t, query, document.Queries[0])
 }
 
 func TestFiltersWithFullPath(t *testing.T) {
-	q := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
+	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
 					{
 						filter accountId as io.harness.beans.Id ;
 					}`)
@@ -84,11 +84,11 @@ func TestFiltersWithFullPath(t *testing.T) {
 	}
 	query.Init()
 
-	assert.Equal(t, query, q)
+	assert.Equal(t, query, document.Queries[0])
 }
 
 func TestWithNoProject(t *testing.T) {
-	q := Parse(`query Select for io.harness.beans.DelegateTasks 
+	document := Parse(`query Select for io.harness.beans.DelegateTasks 
 					{
 						filter accountId as string ;
 					}`)
@@ -101,11 +101,11 @@ func TestWithNoProject(t *testing.T) {
 	}
 	query.Init()
 
-	assert.Equal(t, query, q)
+	assert.Equal(t, query, document.Queries[0])
 }
 
 func TestWithProject(t *testing.T) {
-	q := Parse(`query Select for io.harness.beans.DelegateTasks 
+	document := Parse(`query Select for io.harness.beans.DelegateTasks 
 					{
 						filter accountId as string ;
 						project id ;
@@ -121,11 +121,11 @@ func TestWithProject(t *testing.T) {
 	}
 	query.Init()
 
-	assert.Equal(t, query, q)
+	assert.Equal(t, query, document.Queries[0])
 }
 
 func TestWithMultipleProjects(t *testing.T) {
-	q := Parse(`query Select for io.harness.beans.DelegateTasks 
+	document := Parse(`query Select for io.harness.beans.DelegateTasks 
 					{
 						filter accountId as string ;
 						project id ;
@@ -141,5 +141,5 @@ func TestWithMultipleProjects(t *testing.T) {
 	}
 	query.Init()
 
-	assert.Equal(t, query, q)
+	assert.Equal(t, query, document.Queries[0])
 }

@@ -7,15 +7,19 @@ import (
 )
 
 func TestSanity1(t *testing.T) {
-	query := dom.Query{
-		Name:       "Select",
-		Collection: "io.harness.beans.DelegateTask",
-		Filters: []dom.Filter{
-			{FieldType: "String", FieldName: "accountId", Operation: dom.Eq},
-			{FieldType: "String", FieldName: "uuid", Operation: dom.Eq},
+	document := dom.Document{
+		Queries: []dom.Query{
+			{
+				Name:       "Select",
+				Collection: "io.harness.beans.DelegateTask",
+				Filters: []dom.Filter{
+					{FieldType: "String", FieldName: "accountId", Operation: dom.Eq},
+					{FieldType: "String", FieldName: "uuid", Operation: dom.Eq},
+				},
+			},
 		},
 	}
-	query.Init()
+	document.Init()
 
 	compiler := Compiler{}
 
@@ -78,23 +82,27 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
   }
 }
 `
-	result := compiler.Generate(&query)
+	result := compiler.Generate(&document)
 	assert.Equal(t, expected, result)
 }
 
 func TestSanity2(t *testing.T) {
-	query := dom.Query{
-		Name: "Select",
-		Collection: "io.harness.beans.DelegateTask",
-		Filters: []dom.Filter{
-			{FieldType: "String", FieldName: "orange", Operation: dom.In},
-			{FieldType: "String", FieldName: "worm", Operation: dom.Eq},
-			{FieldType: "String", FieldName: "apple", Operation: dom.In},
-			{FieldType: "String", FieldName: "banana", Operation: dom.In},
+	document := dom.Document{
+		Queries: []dom.Query{
+			{
+				Name:       "Select",
+				Collection: "io.harness.beans.DelegateTask",
+				Filters: []dom.Filter{
+					{FieldType: "String", FieldName: "orange", Operation: dom.In},
+					{FieldType: "String", FieldName: "worm", Operation: dom.Eq},
+					{FieldType: "String", FieldName: "apple", Operation: dom.In},
+					{FieldType: "String", FieldName: "banana", Operation: dom.In},
+				},
+				ProjectFields: []string{"foo", "bar"},
+			},
 		},
-		ProjectFields: []string{"foo", "bar"},
 	}
-	query.Init()
+	document.Init()
 
 	expected := `package io.harness.beans;
 
@@ -178,6 +186,6 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 `
 	compiler := Compiler{}
 
-	var result = compiler.Generate(&query)
+	var result = compiler.Generate(&document)
 	assert.Equal(t, expected, result)
 }

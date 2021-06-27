@@ -7,7 +7,7 @@ import (
 
 type Lexer struct {
 	scanner.Scanner
-	result dom.Query
+	result dom.Document
 }
 
 func (l *Lexer) Lex(lval *DomSymType) int {

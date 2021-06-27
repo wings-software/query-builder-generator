@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func Parse(exp string) dom.Query {
+func Parse(exp string) dom.Document {
 	l := new(Lexer)
 	l.Init(strings.NewReader(exp))
 	DomParse(l)
