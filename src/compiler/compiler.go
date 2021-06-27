@@ -73,7 +73,7 @@ const canonicalFormTemplate = `
          + "\n    .filter(%s)"%s)
 `
 
-const generatedFileTemplate = `package io.harness.beans;
+const generatedFileTemplate = `package %s;
 
 %s
 
@@ -195,5 +195,7 @@ func (compiler *Compiler) Generate(document *dom.Document) string {
 
 	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, fmt.Sprintf(canonicalFormTemplate, collectionName, canonicalExpression.String(), canonicalProjections.String()))
 
-	return fmt.Sprintf(generatedFileTemplate, imports, collectionName, name, createMethod, interfaces.String(), queryImpl, queryCanonicalForms)
+	return fmt.Sprintf(generatedFileTemplate,
+		document.Package, imports,
+		collectionName, name, createMethod, interfaces.String(), queryImpl, queryCanonicalForms)
 }

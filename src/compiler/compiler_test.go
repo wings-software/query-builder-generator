@@ -8,6 +8,7 @@ import (
 
 func TestSanity1(t *testing.T) {
 	document := dom.Document{
+		Package: "io.harness.beans",
 		Queries: []dom.Query{
 			{
 				Name:       "Select",
@@ -88,6 +89,7 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 
 func TestSanity2(t *testing.T) {
 	document := dom.Document{
+		Package: "io.harness.qbg",
 		Queries: []dom.Query{
 			{
 				Name:       "Select",
@@ -104,7 +106,7 @@ func TestSanity2(t *testing.T) {
 	}
 	document.Init()
 
-	expected := `package io.harness.beans;
+	expected := `package io.harness.qbg;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;

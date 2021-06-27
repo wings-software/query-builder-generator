@@ -9,6 +9,7 @@ import (
     "github.com/query-builder-generator/src/dom/parser"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
+	"path"
 )
 
 var cfgFile string
@@ -42,6 +43,8 @@ func generateFile(cmd *cobra.Command) error {
     }
 
     var document = parser.Parse(string(data))
+    document.Package = path.Base(outputFilePath)
+
     var compiler = compiler.Compiler{}
     var outputContent = compiler.Generate(&document)
 

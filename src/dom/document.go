@@ -1,6 +1,7 @@
 package dom
 
 type Document struct {
+	Package string
 	Queries []Query
 }
 
