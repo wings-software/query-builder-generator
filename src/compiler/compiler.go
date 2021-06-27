@@ -18,12 +18,7 @@ const createTemplate = `
 
 const interfaceTemplate = `
   public interface %s {
-    %s %s(%s %s);
-  }`
-
-const interfaceOperationTemplate = `
-  public interface %s {
-    %s %s(Iterable<%s> %s);
+    %s %s;
   }`
 
 const interfaceFinalTemplate = `
@@ -33,14 +28,14 @@ const interfaceFinalTemplate = `
 
 const filterMethodTemplate = `
     @Override
-    public %s %s(%s %s) {
+    public %s %s {
       query.filter(%sKeys.%s, %s);
       return this;
     }`
 
 const filterMethodOperatorTemplate = `
     @Override
-    public %s %s(Iterable<%s> %s) {
+    public %s %s {
       query.field(%sKeys.%s).%s(%s);
       return this;
     }`
@@ -105,7 +100,8 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	var projections strings.Builder
 	if query.ProjectFields != nil {
 		for _, field := range query.ProjectFields {
-			projections.WriteString(fmt.Sprintf("\n                                    .project(%sKeys.%s, true)", collectionName, field))
+			projections.WriteString(fmt.Sprintf(
+				"\n                                    .project(%sKeys.%s, true)", collectionName, field))
 		}
 	}
 
@@ -119,79 +115,61 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	var interfaces strings.Builder
 	var interfaceNames strings.Builder
 
-	var filtersCount = len(query.Filters)
-	for i := 0; i < filtersCount; i++ {
+	// Generate #3
+	var methods strings.Builder
+	for i := range query.Filters {
+		var nextInterface java.Interface
+
+		if i == len(query.Filters)-1 {
+			nextInterface = query
+		} else {
+			nextInterface = query.Filters[i+1]
+		}
+
 		var currentInterface java.Interface
 		currentInterface = query.Filters[i]
+
+		var currentMethod java.Method
+		currentMethod = query.Filters[i]
 
 		interfaceNames.WriteString(currentInterface.InterfaceName())
 		interfaceNames.WriteString(", ")
 
-		var nextInterface java.Interface
-		if i == filtersCount-1 {
-			nextInterface = query
-		} else {
-			nextInterface = query.Filters[i+1]
-		}
+		interfaces.WriteString(fmt.Sprintf(interfaceTemplate,
+			currentInterface.InterfaceName(), nextInterface.InterfaceName(),
+			currentMethod.MethodPrototype()))
 
-		var currFieldType = query.Filters[i].FieldType
 		var currFieldName = query.Filters[i].FieldName
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
 		case dom.Eq:
-			interfaces.WriteString(fmt.Sprintf(interfaceTemplate,
-				currentInterface.InterfaceName(), nextInterface.InterfaceName(),
-				currFieldName, currFieldType, currFieldName))
-		case dom.In:
-			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
-			interfaces.WriteString(fmt.Sprintf(interfaceOperationTemplate,
-				currentInterface.InterfaceName(), nextInterface.InterfaceName(),
-				pluralCurrentFieldName, currFieldType, pluralCurrentFieldName))
-		}
-
-	}
-
-	interfaces.WriteString(fmt.Sprintf(interfaceFinalTemplate, query.InterfaceName(), collectionName))
-	interfaceNames.WriteString(query.InterfaceName())
-
-	// Generate #3
-	var methods strings.Builder
-	for i := 0; i < filtersCount; i++ {
-		var nextInterface java.Interface
-
-		if i == filtersCount-1 {
-			nextInterface = query
-		} else {
-			nextInterface = query.Filters[i+1]
-		}
-
-		var currFieldType = query.Filters[i].FieldType
-		var currFieldName = query.Filters[i].FieldName
-		var currOperationType = query.Filters[i].Operation
-		switch currOperationType {
-		case dom.Eq:
-			methods.WriteString(fmt.Sprintf(filterMethodTemplate, nextInterface.InterfaceName(), currFieldName, currFieldType, currFieldName,
+			methods.WriteString(fmt.Sprintf(filterMethodTemplate,
+				nextInterface.InterfaceName(), currentMethod.MethodPrototype(),
 				collectionName, currFieldName, currFieldName))
 		case dom.In:
 			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
-			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate, nextInterface.InterfaceName(), pluralCurrentFieldName, currFieldType,
-				pluralCurrentFieldName, collectionName, currFieldName, "in", pluralCurrentFieldName))
+			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate,
+				nextInterface.InterfaceName(), currentMethod.MethodPrototype(),
+				collectionName, currFieldName, "in", pluralCurrentFieldName))
 
 		}
 		methods.WriteString("\n")
 	}
+
+	interfaces.WriteString(fmt.Sprintf(interfaceFinalTemplate, query.InterfaceName(), collectionName))
+	interfaceNames.WriteString(query.InterfaceName())
 
 	var queryImpl = fmt.Sprintf(queryImplTemplate, interfaceNames.String(), collectionName, collectionName, methods.String(), collectionName)
 
 	var imports = fmt.Sprintf(importsTemplate, query.Collection, query.Collection, collectionName)
 
 	var canonicalExpression strings.Builder
-	for i := 0; i < filtersCount; i++ {
+	for _, filter := range query.Filters {
 		if len(canonicalExpression.String()) != 0 {
 			canonicalExpression.WriteString(", ")
 		}
-		var currFieldName = query.Filters[i].FieldName
-		var currOperationType = query.Filters[i].Operation
+		var currFieldName = filter.FieldName
+		var currOperationType = filter.Operation
 
 		switch currOperationType {
 		case dom.Eq:
@@ -200,8 +178,6 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 			canonicalExpression.WriteString(currFieldName + " in list<+>")
 		}
 	}
-
-
 
 	var canonicalProjections strings.Builder
 	if query.ProjectFields != nil && len(query.ProjectFields) !=0 {
