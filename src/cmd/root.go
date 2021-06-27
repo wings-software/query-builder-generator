@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/query-builder-generator/src/compiler"
-	"os"
-	"github.com/spf13/cobra"
-	"io/ioutil"
-    "github.com/query-builder-generator/src/dom/parser"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/query-builder-generator/src/compiler"
+	"github.com/query-builder-generator/src/dom/parser"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io/ioutil"
+	"os"
 	"path"
+	"strings"
 )
 
 var cfgFile string
@@ -30,7 +31,10 @@ var generateCmd = &cobra.Command{
     Short: "Generate Java classes",
     Long: "Generate Java classes - to be used in portal code",
     Run: func (cmd *cobra.Command, args []string) {
-        generateFile(cmd)
+        err := generateFile(cmd)
+        if err != nil {
+        	panic(err.Error())
+		}
     },
 }
 
@@ -39,20 +43,22 @@ func generateFile(cmd *cobra.Command) error {
     fmt.Println("Reading file at path [" + inputFilePath +"]")
     data, err := ioutil.ReadFile(inputFilePath)
     if err != nil {
-        fmt.Println(err)
+        return err
     }
 
     var document = parser.Parse(string(data))
-    document.Package = path.Base(outputFilePath)
+    document.Package = strings.Replace(path.Dir(classPath), "/", ".", -1)
 
     var compiler = compiler.Compiler{}
     var outputContent = compiler.Generate(&document)
 
-    fmt.Println("Writing file at path [" + outputFilePath +"]")
-    err = ioutil.WriteFile(outputFilePath, []byte(outputContent), 0777)
+    var absoluteFilePath = path.Join(rootPath, classPath)
+
+    fmt.Println("Writing file at path [" + absoluteFilePath +"]")
+    err = ioutil.WriteFile(absoluteFilePath, []byte(outputContent), 0777)
     if err != nil {
-       fmt.Println(err)
-    }
+		return err
+	}
 
     return nil
 }
@@ -68,12 +74,13 @@ func Execute() {
 
 
 // adds flags
-var inputFilePath, outputFilePath string
+var inputFilePath, rootPath, classPath string
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	generateCmd.Flags().StringVar(&inputFilePath, "input", "default", "--input=<Input File path>")
-    generateCmd.Flags().StringVar(&outputFilePath, "output", "default", "--output=<Output File path>")
+    generateCmd.Flags().StringVar(&rootPath, "root", "default", "--root=<Root directory path>")
+	generateCmd.Flags().StringVar(&classPath, "class", "default", "--class=<Class file path>")
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.qbc.yaml)")
 
