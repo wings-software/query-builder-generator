@@ -5,6 +5,9 @@ go_library(
     srcs = glob(["*.go"]),
     importpath = "github.com/query-builder-generator/src/dom",
     visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_gertd_go_pluralize//:go_default_library",
+    ]
 )
 
 go_test(

@@ -18,12 +18,12 @@ const createTemplate = `
 
 const interfaceTemplate = `
   public interface %s {
-    %sQuery%s %s(%s %s);
+    %s %s(%s %s);
   }`
 
 const interfaceOperationTemplate = `
   public interface %sQuery%s {
-    %sQuery%s %s(Iterable<%s> %s);
+    %s %s(Iterable<%s> %s);
   }`
 
 const interfaceFinalTemplate = `
@@ -33,14 +33,14 @@ const interfaceFinalTemplate = `
 
 const filterMethodTemplate = `
     @Override
-    public %sQuery%s %s(%s %s) {
+    public %s %s(%s %s) {
       query.filter(%sKeys.%s, %s);
       return this;
     }`
 
 const filterMethodOperatorTemplate = `
     @Override
-    public %sQuery%s %s(Iterable<%s> %s) {
+    public %s %s(Iterable<%s> %s) {
       query.field(%sKeys.%s).%s(%s);
       return this;
     }`
@@ -121,21 +121,15 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 
 	var filtersCount = len(query.Filters)
 	for i := 0; i < filtersCount; i++ {
-		var nextFieldName = ""
-		var titleNextFieldName = ""
-		if i == filtersCount-1 {
-			nextFieldName = "Final"
-			titleNextFieldName = "Final"
-		} else {
-			nextFieldName = query.Filters[i+1].FieldName
-			titleNextFieldName = strings.Title(nextFieldName)
-			if query.Filters[i+1].Operation == dom.In {
-				titleNextFieldName = pluralize.Plural(titleNextFieldName)
-			}
-		}
-
 		var currentInterface java.Interface
 		currentInterface = query.Filters[i]
+
+		var nextInterface java.Interface
+		if i == filtersCount-1 {
+			nextInterface = query
+		} else {
+			nextInterface = query.Filters[i+1]
+		}
 
 		var currFieldType = query.Filters[i].FieldType
 		var currFieldName = query.Filters[i].FieldName
@@ -143,13 +137,15 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
 		case dom.Eq:
-			interfaces.WriteString(fmt.Sprintf(interfaceTemplate, currentInterface.InterfaceName(), name, titleNextFieldName,
+			interfaces.WriteString(fmt.Sprintf(interfaceTemplate,
+				currentInterface.InterfaceName(), nextInterface.InterfaceName(),
 				currFieldName, currFieldType, currFieldName))
 			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, currFieldNameTitle))
 		case dom.In:
 			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
 			var pluralCurrentFieldNameTitle = pluralize.Plural(currFieldNameTitle)
-			interfaces.WriteString(fmt.Sprintf(interfaceOperationTemplate, name, pluralCurrentFieldNameTitle, name, titleNextFieldName,
+			interfaces.WriteString(fmt.Sprintf(interfaceOperationTemplate,
+				name, pluralCurrentFieldNameTitle, nextInterface.InterfaceName(),
 				pluralCurrentFieldName, currFieldType, pluralCurrentFieldName))
 			interfaceNames.WriteString(fmt.Sprintf("%sQuery%s, ", name, pluralCurrentFieldNameTitle))
 		}
@@ -162,17 +158,12 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 	// Generate #3
 	var methods strings.Builder
 	for i := 0; i < filtersCount; i++ {
-		var nextFieldName = ""
-		var titleNextFieldName = ""
+		var nextInterface java.Interface
+
 		if i == filtersCount-1 {
-			nextFieldName = "Final"
-			titleNextFieldName = "Final"
+			nextInterface = query
 		} else {
-			nextFieldName = query.Filters[i+1].FieldName
-			titleNextFieldName = strings.Title(nextFieldName)
-			if query.Filters[i+1].Operation == dom.In {
-				titleNextFieldName = pluralize.Plural(titleNextFieldName)
-			}
+			nextInterface = query.Filters[i+1]
 		}
 
 		var currFieldType = query.Filters[i].FieldType
@@ -180,11 +171,11 @@ func (compiler *Compiler) Generate(query *dom.Query) string {
 		var currOperationType = query.Filters[i].Operation
 		switch currOperationType {
 		case dom.Eq:
-			methods.WriteString(fmt.Sprintf(filterMethodTemplate, name, titleNextFieldName, currFieldName, currFieldType, currFieldName,
+			methods.WriteString(fmt.Sprintf(filterMethodTemplate, nextInterface.InterfaceName(), currFieldName, currFieldType, currFieldName,
 				collectionName, currFieldName, currFieldName))
 		case dom.In:
 			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
-			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate, name, titleNextFieldName, pluralCurrentFieldName, currFieldType,
+			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate, nextInterface.InterfaceName(), pluralCurrentFieldName, currFieldType,
 				pluralCurrentFieldName, collectionName, currFieldName, "in", pluralCurrentFieldName))
 
 		}
