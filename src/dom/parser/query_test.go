@@ -14,7 +14,7 @@ import (
 func TestSanityWithSingleFilter(t *testing.T) {
 	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
 		{
-			filter accountId as string ;
+			accountId equal string;
 		}`)
 
 	var query = dom.Query{
@@ -32,8 +32,8 @@ func TestSanityWithSingleFilter(t *testing.T) {
 func TestSanityWithMultipleFilters(t *testing.T) {
 	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
 					{
-						filter accountId as string ;
-						filter delegateId as int ;
+						accountId equal string;
+						delegateId equal int;
 					}`)
 
 	var query = dom.Query{
@@ -52,8 +52,8 @@ func TestSanityWithMultipleFilters(t *testing.T) {
 func TestFiltersWithList(t *testing.T) {
 	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
 					{
-						filter accountId as io.harness.beans.Id from list ;
-						filter delegateId as int from list ;
+						accountId in list of io.harness.beans.Id;
+						delegateId in list of int;
 					}`)
 
 	var query = dom.Query{
@@ -72,7 +72,7 @@ func TestFiltersWithList(t *testing.T) {
 func TestFiltersWithFullPath(t *testing.T) {
 	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks  
 					{
-						filter accountId as io.harness.beans.Id ;
+						accountId equal io.harness.beans.Id;
 					}`)
 
 	var query = dom.Query{
@@ -90,7 +90,7 @@ func TestFiltersWithFullPath(t *testing.T) {
 func TestWithNoProject(t *testing.T) {
 	document := Parse(`query Select for io.harness.beans.DelegateTasks 
 					{
-						filter accountId as string ;
+						accountId equal string;
 					}`)
 	var query = dom.Query{
 		Name: "Select",
@@ -107,8 +107,8 @@ func TestWithNoProject(t *testing.T) {
 func TestWithProject(t *testing.T) {
 	document := Parse(`query Select for io.harness.beans.DelegateTasks 
 					{
-						filter accountId as string ;
-						project id ;
+						accountId equal string;
+						project id;
 					}`)
 
 	var query = dom.Query{
@@ -127,9 +127,9 @@ func TestWithProject(t *testing.T) {
 func TestWithMultipleProjects(t *testing.T) {
 	document := Parse(`query Select for io.harness.beans.DelegateTasks 
 					{
-						filter accountId as string ;
-						project id ;
-						project foo_bar ;
+						accountId equal string;
+						project id;
+						project foo_bar;
 					}`)
 	var query = dom.Query{
 		Name: "Select",

@@ -30,13 +30,18 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.query.PersistentQuery;
+import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.query.Query;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Set;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryAccountId create(HPersistence persistence) {
     return new QueryImpl(persistence.createQuery(DelegateTask.class));
+  }
+  public static SelectQueryAccountId create(HPersistence persistence, Set<QueryChecks> queryChecks) {
+    return new QueryImpl(persistence.createQuery(DelegateTask.class, queryChecks));
   }
 
   public interface SelectQueryAccountId {
@@ -58,13 +63,13 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 
     @Override
     public SelectQueryUuid accountId(String accountId) {
-      query.filter(DelegateTaskKeys.accountId, accountId);
+      query.field(DelegateTaskKeys.accountId).equal(accountId);
       return this;
     }
 
     @Override
     public SelectQueryFinal uuid(String uuid) {
-      query.filter(DelegateTaskKeys.uuid, uuid);
+      query.field(DelegateTaskKeys.uuid).equal(uuid);
       return this;
     }
 
@@ -78,8 +83,8 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
   public List<String> queryCanonicalForms() {
     return ImmutableList.<String>builder()
       .add("collection(DelegateTask)"
-         + "\n    .filter(accountId = <+>, uuid = <+>)")
-    .build();
+         + "\n    .filter(accountId == @, uuid == @)")
+      .build();
   }
 }
 `
@@ -87,7 +92,113 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
 	assert.Equal(t, expected, result)
 }
 
-func TestSanity2(t *testing.T) {
+func TestOperators(t *testing.T) {
+	document := dom.Document{
+		Package: "io.harness.qbg",
+		Queries: []dom.Query{
+			{
+				Name:       "Select",
+				Collection: "io.harness.beans.DelegateTask",
+				Filters: []dom.Filter{
+					{FieldType: "String", FieldName: "equal", Operation: dom.Eq},
+					{FieldType: "String", FieldName: "in", Operation: dom.In},
+					{FieldType: "String", FieldName: "lessThan", Operation: dom.Lt},
+					{FieldType: "String", FieldName: "mod", Operation: dom.Mod},
+				},
+			},
+		},
+	}
+	document.Init()
+
+	expected := `package io.harness.qbg;
+
+import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.persistence.HPersistence;
+import io.harness.query.PersistentQuery;
+import io.harness.persistence.HQuery.QueryChecks;
+import org.mongodb.morphia.query.Query;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.Set;
+
+public class DelegateTaskSelectQuery implements PersistentQuery {
+  public static SelectQueryEqual create(HPersistence persistence) {
+    return new QueryImpl(persistence.createQuery(DelegateTask.class));
+  }
+  public static SelectQueryEqual create(HPersistence persistence, Set<QueryChecks> queryChecks) {
+    return new QueryImpl(persistence.createQuery(DelegateTask.class, queryChecks));
+  }
+
+  public interface SelectQueryEqual {
+    SelectQueryIns equal(String equal);
+  }
+  public interface SelectQueryIns {
+    SelectQueryLessThan inIn(Iterable<String> ins);
+  }
+  public interface SelectQueryLessThan {
+    SelectQueryMod lessThanLessThan(String lessThan);
+  }
+  public interface SelectQueryMod {
+    SelectQueryFinal modModule(long divisor, long remainder);
+  }
+  public interface SelectQueryFinal {
+    Query<DelegateTask> query();
+  }
+
+  private static class QueryImpl implements SelectQueryEqual, SelectQueryIns, SelectQueryLessThan, SelectQueryMod, SelectQueryFinal {
+    Query<DelegateTask> query;
+
+    private QueryImpl(Query<DelegateTask> query) {
+      this.query = query;
+    }
+
+    @Override
+    public SelectQueryIns equal(String equal) {
+      query.field(DelegateTaskKeys.equal).equal(equal);
+      return this;
+    }
+
+    @Override
+    public SelectQueryLessThan inIn(Iterable<String> ins) {
+      query.field(DelegateTaskKeys.in).in(ins);
+      return this;
+    }
+
+    @Override
+    public SelectQueryMod lessThanLessThan(String lessThan) {
+      query.field(DelegateTaskKeys.lessThan).lessThan(lessThan);
+      return this;
+    }
+
+    @Override
+    public SelectQueryFinal modModule(long divisor, long remainder) {
+      query.field(DelegateTaskKeys.mod).mod(divisor, remainder);
+      return this;
+    }
+
+    @Override
+    public Query<DelegateTask> query() {
+      return query;
+    }
+  }
+
+  @Override
+  public List<String> queryCanonicalForms() {
+    return ImmutableList.<String>builder()
+      .add("collection(DelegateTask)"
+         + "\n    .filter(equal == @, in in [@], lessThan < @, mod % @divisor == @remainder)")
+      .build();
+  }
+}
+`
+	compiler := Compiler{}
+
+	var result = compiler.Generate(&document)
+	assert.Equal(t, expected, result)
+}
+
+func TestPlurals(t *testing.T) {
 	document := dom.Document{
 		Package: "io.harness.qbg",
 		Queries: []dom.Query{
@@ -112,9 +223,11 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.query.PersistentQuery;
+import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.query.Query;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Set;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryOranges create(HPersistence persistence) {
@@ -122,18 +235,23 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
                                     .project(DelegateTaskKeys.foo, true)
                                     .project(DelegateTaskKeys.bar, true));
   }
+  public static SelectQueryOranges create(HPersistence persistence, Set<QueryChecks> queryChecks) {
+    return new QueryImpl(persistence.createQuery(DelegateTask.class, queryChecks)
+                                    .project(DelegateTaskKeys.foo, true)
+                                    .project(DelegateTaskKeys.bar, true));
+  }
 
   public interface SelectQueryOranges {
-    SelectQueryWorm oranges(Iterable<String> oranges);
+    SelectQueryWorm orangeIn(Iterable<String> oranges);
   }
   public interface SelectQueryWorm {
     SelectQueryApples worm(String worm);
   }
   public interface SelectQueryApples {
-    SelectQueryBananas apples(Iterable<String> apples);
+    SelectQueryBananas appleIn(Iterable<String> apples);
   }
   public interface SelectQueryBananas {
-    SelectQueryFinal bananas(Iterable<String> bananas);
+    SelectQueryFinal bananaIn(Iterable<String> bananas);
   }
   public interface SelectQueryFinal {
     Query<DelegateTask> query();
@@ -147,25 +265,25 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
     }
 
     @Override
-    public SelectQueryWorm oranges(Iterable<String> oranges) {
+    public SelectQueryWorm orangeIn(Iterable<String> oranges) {
       query.field(DelegateTaskKeys.orange).in(oranges);
       return this;
     }
 
     @Override
     public SelectQueryApples worm(String worm) {
-      query.filter(DelegateTaskKeys.worm, worm);
+      query.field(DelegateTaskKeys.worm).equal(worm);
       return this;
     }
 
     @Override
-    public SelectQueryBananas apples(Iterable<String> apples) {
+    public SelectQueryBananas appleIn(Iterable<String> apples) {
       query.field(DelegateTaskKeys.apple).in(apples);
       return this;
     }
 
     @Override
-    public SelectQueryFinal bananas(Iterable<String> bananas) {
+    public SelectQueryFinal bananaIn(Iterable<String> bananas) {
       query.field(DelegateTaskKeys.banana).in(bananas);
       return this;
     }
@@ -180,9 +298,9 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
   public List<String> queryCanonicalForms() {
     return ImmutableList.<String>builder()
       .add("collection(DelegateTask)"
-         + "\n    .filter(orange in list<+>, worm = <+>, apple in list<+>, banana in list<+>)"
+         + "\n    .filter(orange in [@], worm == @, apple in [@], banana in [@])"
          + "\n    .project(foo, bar)")
-    .build();
+      .build();
   }
 }
 `

@@ -17,11 +17,15 @@ func (filter Filter) InterfaceName() string {
     var name = filter.Query.Name
     var field string
     switch filter.Operation {
-    case Eq:
+    case Eq: fallthrough
+    case Lt: fallthrough
+    case Mod:
         field = filter.FieldName
     case In:
         var pluralize = pluralize.NewClient()
         field = pluralize.Plural(filter.FieldName)
+    default:
+        panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
     }
 
     field = strings.Title(field)
@@ -31,11 +35,15 @@ func (filter Filter) InterfaceName() string {
 func (filter Filter) identifier() string {
     var identifier string
     switch filter.Operation {
-    case Eq:
+    case Mod: fallthrough
+    case Eq: fallthrough
+    case Lt:
         identifier = filter.FieldName
     case In:
         var pluralize = pluralize.NewClient()
         identifier = pluralize.Plural(filter.FieldName)
+    default:
+        panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
     }
 
     // make sure the first letter is lower case
@@ -43,16 +51,33 @@ func (filter Filter) identifier() string {
 }
 
 func (filter Filter) MethodName() string {
-    return filter.identifier()
+    name := filter.FieldName
+    switch filter.Operation {
+    case Eq:
+    case Lt:
+        name += "LessThan"
+    case In:
+        name += "In"
+    case Mod:
+        name += "Module"
+    default:
+        panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
+    }
+    return name
 }
 
 func (filter Filter) MethodArguments() string {
     var pattern string
     switch filter.Operation {
-    case Eq:
+    case Eq: fallthrough
+    case Lt:
         pattern = "%s %s"
     case In:
         pattern = "Iterable<%s> %s"
+    case Mod:
+        return "long divisor, long remainder"
+    default:
+        panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
     }
     return fmt.Sprintf(pattern, filter.FieldType, filter.identifier())
 }
@@ -61,3 +86,29 @@ func (filter Filter) MethodPrototype() string {
     return fmt.Sprintf("%s(%s)", filter.MethodName(), filter.MethodArguments())
 }
 
+const methodBodyTemplate = `{
+      query.field(%sKeys.%s).%s(%s);
+      return this;
+    }`
+
+const methodBodyModuleTemplate = `{
+      query.field(%sKeys.%s).mod(divisor, remainder);
+      return this;
+    }`
+
+func (filter Filter) MethodBody() string {
+    var method string
+    switch filter.Operation {
+    case Eq:
+        method = "equal"
+    case In:
+        method = "in"
+    case Lt:
+        method = "lessThan"
+    case Mod:
+        return fmt.Sprintf(methodBodyModuleTemplate, filter.Query.CollectionName(), filter.FieldName)
+    default:
+        panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
+    }
+    return fmt.Sprintf(methodBodyTemplate, filter.Query.CollectionName(), filter.FieldName, method, filter.identifier())
+}

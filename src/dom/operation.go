@@ -4,6 +4,8 @@ type OperationType int
 
 const(
 	None = iota
-	In
 	Eq
+	In
+	Lt
+	Mod
 )

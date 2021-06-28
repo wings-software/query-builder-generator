@@ -23,20 +23,31 @@ func (l *Lexer) Lex(lval *DomSymType) int {
 	case 125:
 	default:
 		switch lit {
-		case "query":
-			tok = QUERY
+		case "equal":
+			tok = EQUAL
 		case "for":
 			tok = FOR
-		case "project":
-			tok = PROJECT
-		case "filter":
-			tok = FILTER
-		case "as":
-			tok = AS
-		case "from":
-			tok = FROM
+		case "in":
+			tok = IN
+		case "is":
+			tok = IS
+		case "less":
+			tok = LESS
 		case "list":
 			tok = LIST
+		case "module":
+			tok = MODULE
+		case "of":
+			tok = OF
+		case "project":
+			tok = PROJECT
+		case "query":
+			tok = QUERY
+		case "remainder":
+			tok = REMAINDER
+		case "than":
+			tok = THAN
+
 		default:
 			tok = IDENTIFIER
 			lval.identifier = lit

@@ -24,12 +24,17 @@ type Token struct {
 
 %token <query> QUERY
 %token <identifier> IDENTIFIER
+%token EQUAL
 %token FOR
-%token PROJECT
-%token FILTER
-%token AS
-%token FROM
+%token IN
+%token IS
+%token LESS
 %token LIST
+%token MODULE
+%token OF
+%token PROJECT
+%token REMAINDER
+%token THAN
 
 %type <document> document
 %type <queries> query_list
@@ -81,13 +86,21 @@ filter_list : 	filter
             }
             ;
 
-filter      :   FILTER IDENTIFIER AS classname ';'
+filter      :   IDENTIFIER EQUAL classname ';'
             {
-                $$ = dom.Filter{FieldType: $4, FieldName: $2, Operation: dom.Eq}
+                $$ = dom.Filter{FieldType: $3, FieldName: $1, Operation: dom.Eq}
             }
-            | FILTER IDENTIFIER AS classname FROM LIST ';'
+            |   IDENTIFIER LESS THAN classname ';'
             {
-                $$ = dom.Filter{FieldType: $4, FieldName: $2, Operation: dom.In}
+                $$ = dom.Filter{FieldType: $4, FieldName: $1, Operation: dom.Lt}
+            }
+            |   IDENTIFIER IN LIST OF classname ';'
+            {
+                $$ = dom.Filter{FieldType: $5, FieldName: $1, Operation: dom.In}
+            }
+            |   IDENTIFIER MODULE REMAINDER IS ';'
+            {
+                $$ = dom.Filter{FieldName: $1, Operation: dom.Mod}
             }
             ;
 
@@ -115,4 +128,5 @@ projectfield: PROJECT IDENTIFIER ';'
             {
                 $$ = $2
             }
+            ;
 %%

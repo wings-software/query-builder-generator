@@ -11,9 +11,14 @@ import (
 type Compiler struct {
 }
 
-const createTemplate = `
+const create1Template = `
   public static %s create(HPersistence persistence) {
     return new QueryImpl(persistence.createQuery(%s.class)%s);
+  }`
+
+const create2Template = `
+  public static %s create(HPersistence persistence, Set<QueryChecks> queryChecks) {
+    return new QueryImpl(persistence.createQuery(%s.class, queryChecks)%s);
   }`
 
 const interfaceTemplate = `
@@ -26,19 +31,9 @@ const interfaceFinalTemplate = `
     Query<%s> query();
   }`
 
-const filterMethodTemplate = `
+const methodTemplate = `
     @Override
-    public %s %s {
-      query.filter(%sKeys.%s, %s);
-      return this;
-    }`
-
-const filterMethodOperatorTemplate = `
-    @Override
-    public %s %s {
-      query.field(%sKeys.%s).%s(%s);
-      return this;
-    }`
+    public %s %s %s`
 
 const queryImplTemplate = `
   private static class QueryImpl implements %s {
@@ -58,14 +53,16 @@ const importsTemplate = `import %s;
 import %s.%sKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.query.PersistentQuery;
+import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.query.Query;
 import com.google.common.collect.ImmutableList;
-import java.util.List;`
+import java.util.List;
+import java.util.Set;`
 
 const queryCanonicalFormsTemplate = `
   @Override
   public List<String> queryCanonicalForms() {
-    return ImmutableList.<String>builder()%s    .build();
+    return ImmutableList.<String>builder()%s      .build();
   }`
 
 const canonicalFormTemplate = `
@@ -84,11 +81,6 @@ public class %s%sQuery implements PersistentQuery {%s
 }
 `
 
-func (compiler *Compiler) collectionName(collection string) string {
-	ss := strings.Split(collection, ".")
-	return ss[len(ss)-1]
-}
-
 func (compiler *Compiler) Generate(document *dom.Document) string {
 	fmt.Println("Generating Java File")
 
@@ -97,7 +89,7 @@ func (compiler *Compiler) Generate(document *dom.Document) string {
 	var query = document.Queries[0]
 
 	var name = query.Name
-	var collectionName = compiler.collectionName(query.Collection)
+	var collectionName = query.CollectionName()
 
 	var projections strings.Builder
 	if query.ProjectFields != nil {
@@ -112,7 +104,8 @@ func (compiler *Compiler) Generate(document *dom.Document) string {
 		titleFieldName = pluralize.Plural(titleFieldName)
 	}
 
-	createMethod := fmt.Sprintf(createTemplate, query.Filters[0].InterfaceName(), collectionName, projections.String())
+	createMethod := fmt.Sprintf(create1Template, query.Filters[0].InterfaceName(), collectionName, projections.String())
+	createMethod += fmt.Sprintf(create2Template, query.Filters[0].InterfaceName(), collectionName, projections.String())
 
 	var interfaces strings.Builder
 	var interfaceNames strings.Builder
@@ -141,19 +134,10 @@ func (compiler *Compiler) Generate(document *dom.Document) string {
 			currentInterface.InterfaceName(), nextInterface.InterfaceName(),
 			currentMethod.MethodPrototype()))
 
-		var currFieldName = query.Filters[i].FieldName
-		var currOperationType = query.Filters[i].Operation
-		switch currOperationType {
-		case dom.Eq:
-			methods.WriteString(fmt.Sprintf(filterMethodTemplate,
-				nextInterface.InterfaceName(), currentMethod.MethodPrototype(),
-				collectionName, currFieldName, currFieldName))
-		case dom.In:
-			var pluralCurrentFieldName = pluralize.Plural(currFieldName)
-			methods.WriteString(fmt.Sprintf(filterMethodOperatorTemplate,
-				nextInterface.InterfaceName(), currentMethod.MethodPrototype(),
-				collectionName, currFieldName, "in", pluralCurrentFieldName))
-		}
+		methods.WriteString(fmt.Sprintf(methodTemplate,
+			nextInterface.InterfaceName(),
+			currentMethod.MethodPrototype(),
+			currentMethod.MethodBody()))
 		methods.WriteString("\n")
 	}
 
@@ -174,9 +158,15 @@ func (compiler *Compiler) Generate(document *dom.Document) string {
 
 		switch currOperationType {
 		case dom.Eq:
-			canonicalExpression.WriteString(currFieldName + " = <+>")
+			canonicalExpression.WriteString(currFieldName + " == @")
+		case dom.Lt:
+			canonicalExpression.WriteString(currFieldName + " < @")
 		case dom.In:
-			canonicalExpression.WriteString(currFieldName + " in list<+>")
+			canonicalExpression.WriteString(currFieldName + " in [@]")
+		case dom.Mod:
+			canonicalExpression.WriteString(currFieldName + " % @divisor == @remainder")
+		default:
+			panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
 		}
 	}
 
