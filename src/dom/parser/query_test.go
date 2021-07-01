@@ -18,7 +18,7 @@ func TestSanityWithSingleFilter(t *testing.T) {
 		}`)
 
 	var query = dom.Query{
-		Name: "DelegateTask",
+		Name:       "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
 			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
@@ -37,7 +37,7 @@ func TestSanityWithMultipleFilters(t *testing.T) {
 					}`)
 
 	var query = dom.Query{
-		Name: "DelegateTask",
+		Name:       "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
 			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
@@ -57,11 +57,29 @@ func TestFiltersWithList(t *testing.T) {
 					}`)
 
 	var query = dom.Query{
-		Name: "DelegateTask",
+		Name:       "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
 			{FieldType: "io.harness.beans.Id", FieldName: "accountId", Operation: dom.In},
 			{FieldType: "int", FieldName: "delegateId", Operation: dom.In},
+		},
+	}
+	query.Init()
+
+	assert.Equal(t, query, document.Queries[0])
+}
+
+func TestFiltersWithModule(t *testing.T) {
+	document := Parse(`query DelegateTask for io.harness.beans.DelegateTasks
+					{
+						accountId module remainder is;
+					}`)
+
+	var query = dom.Query{
+		Name:       "DelegateTask",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters: []dom.Filter{
+			{FieldName: "accountId", Operation: dom.Mod},
 		},
 	}
 	query.Init()
@@ -76,7 +94,7 @@ func TestFiltersWithFullPath(t *testing.T) {
 					}`)
 
 	var query = dom.Query{
-		Name: "DelegateTask",
+		Name:       "DelegateTask",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
 			{FieldType: "io.harness.beans.Id", FieldName: "accountId", Operation: dom.Eq},
@@ -93,7 +111,7 @@ func TestWithNoProject(t *testing.T) {
 						accountId equal string;
 					}`)
 	var query = dom.Query{
-		Name: "Select",
+		Name:       "Select",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
 			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
@@ -112,7 +130,7 @@ func TestWithProject(t *testing.T) {
 					}`)
 
 	var query = dom.Query{
-		Name: "Select",
+		Name:       "Select",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
 			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
@@ -132,12 +150,40 @@ func TestWithMultipleProjects(t *testing.T) {
 						project foo_bar;
 					}`)
 	var query = dom.Query{
-		Name: "Select",
+		Name:       "Select",
 		Collection: "io.harness.beans.DelegateTasks",
 		Filters: []dom.Filter{
 			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
 		},
 		ProjectFields: []string{"id", "foo_bar"},
+	}
+	query.Init()
+
+	assert.Equal(t, query, document.Queries[0])
+}
+
+func TestWithOptionals(t *testing.T) {
+	document := Parse(`query Select for io.harness.beans.DelegateTasks 
+					{
+						accountId equal string;
+						optional Foo {
+							uuid equal string;
+						}
+					}`)
+	var query = dom.Query{
+		Name:       "Select",
+		Collection: "io.harness.beans.DelegateTasks",
+		Filters: []dom.Filter{
+			{FieldType: "string", FieldName: "accountId", Operation: dom.Eq},
+		},
+		Optionals: []dom.Optional{
+			{
+				Name: "Foo",
+				Filters: []dom.Filter{
+					{FieldType: "string", FieldName: "uuid", Operation: dom.Eq},
+				},
+			},
+		},
 	}
 	query.Init()
 

@@ -6,15 +6,22 @@ import (
 )
 
 type Query struct {
-	Name          string
-	Collection    string
-	Filters 	[]Filter
+	Name            string
+	Collection      string
+	Filters 	  []Filter
+	Optionals 	  []Optional
 	ProjectFields []string
 }
 
 func (query Query) Init() {
 	for i := range query.Filters {
 		query.Filters[i].Query = &query
+	}
+	if query.Optionals != nil {
+		for i := range query.Optionals {
+			query.Optionals[i].Query = &query
+			query.Optionals[i].Init()
+		}
 	}
 }
 
@@ -25,5 +32,13 @@ func (query Query) CollectionName() string {
 
 func (query Query) InterfaceName() string {
 	var name = query.Name
-	return fmt.Sprintf("%sQueryFinal", name )
+	if len(query.Optionals) == 0 {
+		return fmt.Sprintf("%sQueryFinal", name)
+	} else {
+		return fmt.Sprintf("%sQueryOptions", name)
+	}
+}
+
+func (query Query) ReturnFromThis() string {
+	return "return this;"
 }

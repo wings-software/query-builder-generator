@@ -28,13 +28,15 @@ func TestSanity1(t *testing.T) {
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+
 import io.harness.persistence.HPersistence;
-import io.harness.query.PersistentQuery;
 import io.harness.persistence.HQuery.QueryChecks;
-import org.mongodb.morphia.query.Query;
+import io.harness.query.PersistentQuery;
+
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
+import org.mongodb.morphia.query.Query;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryAccountId create(HPersistence persistence) {
@@ -114,13 +116,15 @@ func TestOperators(t *testing.T) {
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+
 import io.harness.persistence.HPersistence;
-import io.harness.query.PersistentQuery;
 import io.harness.persistence.HQuery.QueryChecks;
-import org.mongodb.morphia.query.Query;
+import io.harness.query.PersistentQuery;
+
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
+import org.mongodb.morphia.query.Query;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryEqual create(HPersistence persistence) {
@@ -221,13 +225,15 @@ func TestPlurals(t *testing.T) {
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+
 import io.harness.persistence.HPersistence;
-import io.harness.query.PersistentQuery;
 import io.harness.persistence.HQuery.QueryChecks;
-import org.mongodb.morphia.query.Query;
+import io.harness.query.PersistentQuery;
+
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
+import org.mongodb.morphia.query.Query;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryOranges create(HPersistence persistence) {
@@ -300,6 +306,102 @@ public class DelegateTaskSelectQuery implements PersistentQuery {
       .add("collection(DelegateTask)"
          + "\n    .filter(orange in [@], worm == @, apple in [@], banana in [@])"
          + "\n    .project(foo, bar)")
+      .build();
+  }
+}
+`
+	compiler := Compiler{}
+
+	var result = compiler.Generate(&document)
+	assert.Equal(t, expected, result)
+}
+
+func TestOptional(t *testing.T) {
+	document := dom.Document{
+		Package: "io.harness.qbg",
+		Queries: []dom.Query{
+			{
+				Name:       "Timeout",
+				Collection: "io.harness.beans.DelegateTask",
+				Filters: []dom.Filter{
+					{FieldType: "String", FieldName: "orange", Operation: dom.Eq},
+				},
+				Optionals: []dom.Optional{
+					{Name: "parasite", Filters: []dom.Filter{
+						{FieldType: "String", FieldName: "worm", Operation: dom.Eq},
+					}},
+				},
+			},
+		},
+	}
+	document.Init()
+
+	expected := `package io.harness.qbg;
+
+import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
+
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.HQuery.QueryChecks;
+import io.harness.query.PersistentQuery;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.Set;
+import org.mongodb.morphia.query.Query;
+
+public class DelegateTaskTimeoutQuery implements PersistentQuery {
+  public static TimeoutQueryOrange create(HPersistence persistence) {
+    return new QueryImpl(persistence.createQuery(DelegateTask.class));
+  }
+  public static TimeoutQueryOrange create(HPersistence persistence, Set<QueryChecks> queryChecks) {
+    return new QueryImpl(persistence.createQuery(DelegateTask.class, queryChecks));
+  }
+
+  public interface TimeoutQueryOrange {
+    TimeoutQueryOptions orange(String orange);
+  }
+  public interface TimeoutQueryWorm {
+    void worm(String worm);
+  }
+  public interface TimeoutQueryOptions {
+    Query<DelegateTask> query();
+    default TimeoutQueryWorm parasite()  {
+      return (TimeoutQueryWorm) this;
+    }
+  }
+
+  private static class QueryImpl implements TimeoutQueryOrange, TimeoutQueryWorm, TimeoutQueryOptions {
+    Query<DelegateTask> query;
+
+    private QueryImpl(Query<DelegateTask> query) {
+      this.query = query;
+    }
+
+    @Override
+    public TimeoutQueryOptions orange(String orange) {
+      query.field(DelegateTaskKeys.orange).equal(orange);
+      return this;
+    }
+
+    @Override
+    public void worm(String worm) {
+      query.field(DelegateTaskKeys.worm).equal(worm);
+    }
+
+    @Override
+    public Query<DelegateTask> query() {
+      return query;
+    }
+  }
+
+  @Override
+  public List<String> queryCanonicalForms() {
+    return ImmutableList.<String>builder()
+      .add("collection(DelegateTask)"
+         + "\n    .filter(orange == @)")
+      .add("collection(DelegateTask)"
+         + "\n    .filter(orange == @, worm == @)")
       .build();
   }
 }

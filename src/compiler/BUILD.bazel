@@ -7,7 +7,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//src/dom:go_default_library",
-        "//src/compiler/java:go_default_library",
+        "//src/lang/java:go_default_library",
         "@com_github_gertd_go_pluralize//:go_default_library",
     ]
 )

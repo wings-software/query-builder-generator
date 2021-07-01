@@ -39,6 +39,8 @@ func (l *Lexer) Lex(lval *DomSymType) int {
 			tok = MODULE
 		case "of":
 			tok = OF
+		case "optional":
+			tok = OPTIONAL
 		case "project":
 			tok = PROJECT
 		case "query":

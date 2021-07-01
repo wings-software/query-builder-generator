@@ -6,6 +6,7 @@ go_library(
     importpath = "github.com/query-builder-generator/src/dom",
     visibility = ["//visibility:public"],
     deps = [
+        "//src/lang/java:go_default_library",
         "@com_github_gertd_go_pluralize//:go_default_library",
     ]
 )

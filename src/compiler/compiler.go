@@ -3,8 +3,9 @@ package compiler
 import (
 	"fmt"
 	pluralize "github.com/gertd/go-pluralize"
-	"github.com/query-builder-generator/src/compiler/java"
+	"github.com/query-builder-generator/src/lang/java"
 	"github.com/query-builder-generator/src/dom"
+	"math"
 	"strings"
 )
 
@@ -28,8 +29,13 @@ const interfaceTemplate = `
 
 const interfaceFinalTemplate = `
   public interface %s {
-    Query<%s> query();
+    Query<%s> query();%s
   }`
+
+const optionMethod = `
+    default %s %s()  {
+      return (%s) this;
+    }`
 
 const methodTemplate = `
     @Override
@@ -51,24 +57,26 @@ const queryImplTemplate = `
 
 const importsTemplate = `import %s;
 import %s.%sKeys;
+
 import io.harness.persistence.HPersistence;
-import io.harness.query.PersistentQuery;
 import io.harness.persistence.HQuery.QueryChecks;
-import org.mongodb.morphia.query.Query;
+import io.harness.query.PersistentQuery;
+
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Set;`
+import java.util.Set;
+import org.mongodb.morphia.query.Query;`
 
 const queryCanonicalFormsTemplate = `
   @Override
   public List<String> queryCanonicalForms() {
-    return ImmutableList.<String>builder()%s      .build();
+    return ImmutableList.<String>builder()%s
+      .build();
   }`
 
 const canonicalFormTemplate = `
       .add("collection(%s)"
-         + "\n    .filter(%s)"%s)
-`
+         + "\n    .filter(%s)"%s)`
 
 const generatedFileTemplate = `package %s;
 
@@ -80,6 +88,10 @@ public class %s%sQuery implements PersistentQuery {%s
 %s
 }
 `
+
+func powInt(x, y int) int {
+	return int(math.Pow(float64(x), float64(y)))
+}
 
 func (compiler *Compiler) Generate(document *dom.Document) string {
 	fmt.Println("Generating Java File")
@@ -137,38 +149,54 @@ func (compiler *Compiler) Generate(document *dom.Document) string {
 		methods.WriteString(fmt.Sprintf(methodTemplate,
 			nextInterface.InterfaceName(),
 			currentMethod.MethodPrototype(),
-			currentMethod.MethodBody()))
+			currentMethod.MethodBody(nextInterface)))
 		methods.WriteString("\n")
 	}
 
-	interfaces.WriteString(fmt.Sprintf(interfaceFinalTemplate, query.InterfaceName(), collectionName))
+	for _, optinal := range query.Optionals {
+		for i := range optinal.Filters {
+			var nextInterface java.Interface
+
+			if i == len(optinal.Filters)-1 {
+				nextInterface = java.Void{}
+			} else {
+				nextInterface = optinal.Filters[i+1]
+			}
+
+			var currentInterface java.Interface
+			currentInterface = optinal.Filters[i]
+
+			var currentMethod java.Method
+			currentMethod = optinal.Filters[i]
+
+			interfaceNames.WriteString(currentInterface.InterfaceName())
+			interfaceNames.WriteString(", ")
+
+			interfaces.WriteString(fmt.Sprintf(interfaceTemplate,
+				currentInterface.InterfaceName(), nextInterface.InterfaceName(),
+				currentMethod.MethodPrototype()))
+
+			methods.WriteString(fmt.Sprintf(methodTemplate,
+				nextInterface.InterfaceName(),
+				currentMethod.MethodPrototype(),
+				currentMethod.MethodBody(nextInterface)))
+			methods.WriteString("\n")
+		}
+	}
+
+	var options strings.Builder
+
+	for _, optinal := range query.Optionals {
+		interfaceName := optinal.Filters[0].InterfaceName()
+		options.WriteString(fmt.Sprintf(optionMethod, interfaceName, optinal.Name, interfaceName))
+	}
+
+	interfaces.WriteString(fmt.Sprintf(interfaceFinalTemplate, query.InterfaceName(), collectionName, options.String()))
 	interfaceNames.WriteString(query.InterfaceName())
 
 	var queryImpl = fmt.Sprintf(queryImplTemplate, interfaceNames.String(), collectionName, collectionName, methods.String(), collectionName)
 
 	var imports = fmt.Sprintf(importsTemplate, query.Collection, query.Collection, collectionName)
-
-	var canonicalExpression strings.Builder
-	for _, filter := range query.Filters {
-		if len(canonicalExpression.String()) != 0 {
-			canonicalExpression.WriteString(", ")
-		}
-		var currFieldName = filter.FieldName
-		var currOperationType = filter.Operation
-
-		switch currOperationType {
-		case dom.Eq:
-			canonicalExpression.WriteString(currFieldName + " == @")
-		case dom.Lt:
-			canonicalExpression.WriteString(currFieldName + " < @")
-		case dom.In:
-			canonicalExpression.WriteString(currFieldName + " in [@]")
-		case dom.Mod:
-			canonicalExpression.WriteString(currFieldName + " % @divisor == @remainder")
-		default:
-			panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
-		}
-	}
 
 	var canonicalProjections strings.Builder
 	if query.ProjectFields != nil && len(query.ProjectFields) != 0 {
@@ -183,7 +211,43 @@ func (compiler *Compiler) Generate(document *dom.Document) string {
 		canonicalProjections.WriteString(")\"")
 	}
 
-	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, fmt.Sprintf(canonicalFormTemplate, collectionName, canonicalExpression.String(), canonicalProjections.String()))
+	var canonicalExpressions strings.Builder
+	for i := 0; i < powInt(2, len(query.Optionals)); i++ {
+		var canonicalExpression strings.Builder
+		filters := query.Filters
+		flag := i
+		for _, optional := range query.Optionals {
+			if flag%2 == 1 {
+				filters = append(filters, optional.Filters...)
+			}
+			flag /= 2
+		}
+
+		for _, filter := range filters {
+			if len(canonicalExpression.String()) != 0 {
+				canonicalExpression.WriteString(", ")
+			}
+			var currFieldName = filter.FieldName
+			var currOperationType = filter.Operation
+
+			switch currOperationType {
+			case dom.Eq:
+				canonicalExpression.WriteString(currFieldName + " == @")
+			case dom.Lt:
+				canonicalExpression.WriteString(currFieldName + " < @")
+			case dom.In:
+				canonicalExpression.WriteString(currFieldName + " in [@]")
+			case dom.Mod:
+				canonicalExpression.WriteString(currFieldName + " % @divisor == @remainder")
+			default:
+				panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
+			}
+		}
+
+		canonicalExpressions.WriteString(fmt.Sprintf(canonicalFormTemplate, collectionName, canonicalExpression.String(), canonicalProjections.String()))
+	}
+
+	var queryCanonicalForms = fmt.Sprintf(queryCanonicalFormsTemplate, canonicalExpressions.String())
 
 	return fmt.Sprintf(generatedFileTemplate,
 		document.Package, imports,

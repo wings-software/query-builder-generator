@@ -11,6 +11,8 @@ type Token struct {
 
 %union{
     document dom.Document
+    optionals []dom.Optional
+    optional dom.Optional
     queries []dom.Query
     query dom.Query
     identifier string
@@ -32,6 +34,7 @@ type Token struct {
 %token LIST
 %token MODULE
 %token OF
+%token OPTIONAL
 %token PROJECT
 %token REMAINDER
 %token THAN
@@ -39,11 +42,13 @@ type Token struct {
 %type <document> document
 %type <queries> query_list
 %type <query> query
-%type <classname> classname
+%type <optionals> optional_list
+%type <optional> optional
 %type <filters> filter_list
 %type <filter> filter
 %type <projectfields> projectfield_list
 %type <projectfield> projectfield
+%type <classname> classname
 
 %%
 
@@ -69,10 +74,36 @@ query       :   QUERY IDENTIFIER FOR classname '{' filter_list '}'
                 $$ = dom.Query{Name: $2, Collection: $4, Filters: $6 }
                 $$.Init()
             }
+            |   QUERY IDENTIFIER FOR classname '{' filter_list optional_list '}'
+            {
+                $$ = dom.Query{Name: $2, Collection: $4, Filters: $6, Optionals: $7 }
+                $$.Init()
+            }
             |   QUERY IDENTIFIER FOR classname '{' filter_list projectfield_list '}'
             {
                 $$ = dom.Query{Name: $2, Collection: $4, Filters: $6, ProjectFields: $7}
                 $$.Init()
+            }
+            |   QUERY IDENTIFIER FOR classname '{' filter_list optional_list projectfield_list '}'
+            {
+                $$ = dom.Query{Name: $2, Collection: $4, Filters: $6, Optionals: $7, ProjectFields: $8}
+                $$.Init()
+            }
+            ;
+
+optional_list:  optional
+            {
+                $$ = []dom.Optional{$1}
+            }
+            |   optional_list optional
+            {
+                $$ = append($1, $2)
+            }
+            ;
+
+optional    :   OPTIONAL IDENTIFIER '{' filter_list '}'
+            {
+                $$ = dom.Optional{Name: $2, Filters: $4}
             }
             ;
 

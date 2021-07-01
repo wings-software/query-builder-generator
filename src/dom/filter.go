@@ -3,6 +3,7 @@ package dom
 import (
     "fmt"
     pluralize "github.com/gertd/go-pluralize"
+    "github.com/query-builder-generator/src/lang/java"
     "strings"
 )
 
@@ -30,6 +31,10 @@ func (filter Filter) InterfaceName() string {
 
     field = strings.Title(field)
     return fmt.Sprintf("%sQuery%s", name , field)
+}
+
+func (_ Filter) ReturnFromThis() string {
+    return "return this;"
 }
 
 func (filter Filter) identifier() string {
@@ -87,16 +92,19 @@ func (filter Filter) MethodPrototype() string {
 }
 
 const methodBodyTemplate = `{
-      query.field(%sKeys.%s).%s(%s);
-      return this;
+      query.field(%sKeys.%s).%s(%s);%s
     }`
 
 const methodBodyModuleTemplate = `{
-      query.field(%sKeys.%s).mod(divisor, remainder);
-      return this;
+      query.field(%sKeys.%s).mod(divisor, remainder);%s
     }`
 
-func (filter Filter) MethodBody() string {
+func (filter Filter) MethodBody(returning java.Interface) string {
+    returnInterface := returning.ReturnFromThis()
+    if len(returnInterface) > 0 {
+        returnInterface = "\n      " + returnInterface
+    }
+
     var method string
     switch filter.Operation {
     case Eq:
@@ -106,9 +114,9 @@ func (filter Filter) MethodBody() string {
     case Lt:
         method = "lessThan"
     case Mod:
-        return fmt.Sprintf(methodBodyModuleTemplate, filter.Query.CollectionName(), filter.FieldName)
+        return fmt.Sprintf(methodBodyModuleTemplate, filter.Query.CollectionName(), filter.FieldName, returnInterface)
     default:
         panic(fmt.Sprintf("Unknown filter operation %+v", filter.Operation))
     }
-    return fmt.Sprintf(methodBodyTemplate, filter.Query.CollectionName(), filter.FieldName, method, filter.identifier())
+    return fmt.Sprintf(methodBodyTemplate, filter.Query.CollectionName(), filter.FieldName, method, filter.identifier(), returnInterface)
 }
