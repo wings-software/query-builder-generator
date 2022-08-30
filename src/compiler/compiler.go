@@ -2,11 +2,12 @@ package compiler
 
 import (
 	"fmt"
-	pluralize "github.com/gertd/go-pluralize"
-	"github.com/query-builder-generator/src/lang/java"
-	"github.com/query-builder-generator/src/dom"
 	"math"
 	"strings"
+
+	pluralize "github.com/gertd/go-pluralize"
+	"github.com/query-builder-generator/src/dom"
+	"github.com/query-builder-generator/src/lang/java"
 )
 
 type Compiler struct {
@@ -65,7 +66,7 @@ import io.harness.query.PersistentQuery;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
-import org.mongodb.morphia.query.Query;`
+import dev.morphia.query.Query;`
 
 const queryCanonicalFormsTemplate = `
   @Override

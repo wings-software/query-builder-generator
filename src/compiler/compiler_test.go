@@ -1,9 +1,10 @@
 package compiler
 
 import (
+	"testing"
+
 	"github.com/query-builder-generator/src/dom"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSanity1(t *testing.T) {
@@ -36,7 +37,7 @@ import io.harness.query.PersistentQuery;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.query.Query;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryAccountId create(HPersistence persistence) {
@@ -124,7 +125,7 @@ import io.harness.query.PersistentQuery;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.query.Query;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryEqual create(HPersistence persistence) {
@@ -233,7 +234,7 @@ import io.harness.query.PersistentQuery;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.query.Query;
 
 public class DelegateTaskSelectQuery implements PersistentQuery {
   public static SelectQueryOranges create(HPersistence persistence) {
@@ -348,7 +349,7 @@ import io.harness.query.PersistentQuery;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.query.Query;
 
 public class DelegateTaskTimeoutQuery implements PersistentQuery {
   public static TimeoutQueryOrange create(HPersistence persistence) {
